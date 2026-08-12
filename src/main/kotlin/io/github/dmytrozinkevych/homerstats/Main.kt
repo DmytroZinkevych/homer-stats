@@ -3,8 +3,8 @@ package io.github.dmytrozinkevych.homerstats
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.application.*
+import io.ktor.server.cio.*
 import io.ktor.server.engine.*
-import io.ktor.server.netty.*
 import io.ktor.server.plugins.contentnegotiation.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
@@ -19,7 +19,7 @@ data class ClimateTelemetryPayload(
 )
 
 fun main() {
-    embeddedServer(Netty, port = 8000) {
+    embeddedServer(CIO, port = 8000) {
         // Enable JSON deserialization
         install(ContentNegotiation) {
             json()
