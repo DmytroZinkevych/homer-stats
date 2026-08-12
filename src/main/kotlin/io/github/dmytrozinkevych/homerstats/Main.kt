@@ -10,6 +10,8 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
+import java.io.File
 
 @Serializable
 data class ClimateTelemetryPayload(
@@ -17,6 +19,9 @@ data class ClimateTelemetryPayload(
     val temperature: Float,
     val humidity: Int
 )
+
+// Define local file storage
+private val telemetryFile = File("telemetry_data.jsonl")
 
 fun main() {
     embeddedServer(CIO, port = 8000) {
@@ -28,6 +33,12 @@ fun main() {
         routing {
             post ("/api/climate-telemetry") {
                 val payload = call.receive<ClimateTelemetryPayload>()
+
+                val jsonLine = Json.encodeToString(payload) + "\n"
+                synchronized(telemetryFile) {
+                    telemetryFile.appendText(jsonLine)
+                }
+
                 with (payload) {
                     println("[$timestamp] Recorded: Temperature=$temperature°C, Humidity=$humidity%")
                 }
