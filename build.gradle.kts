@@ -1,6 +1,8 @@
 plugins {
     kotlin("jvm") version "2.4.0"
     kotlin("plugin.serialization") version "2.4.0"
+    application
+    id("com.gradleup.shadow") version "9.6.1"
 }
 
 group = "io.github.dmytrozinkevych"
@@ -30,4 +32,8 @@ kotlin {
 
 tasks.test {
     useJUnitPlatform()
+}
+
+application {
+    mainClass.set("io.github.dmytrozinkevych.homerstats.MainKt")
 }
