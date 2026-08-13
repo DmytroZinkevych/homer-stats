@@ -20,11 +20,12 @@ data class ClimateTelemetryPayload(
     val humidity: Int
 )
 
-// Define local file storage
+private const val PORT = 8000;
+
 private val telemetryFile = File("telemetry_data.jsonl")
 
 fun main() {
-    embeddedServer(CIO, port = 8000) {
+    embeddedServer(CIO, port = PORT) {
         // Enable JSON deserialization
         install(ContentNegotiation) {
             json()
