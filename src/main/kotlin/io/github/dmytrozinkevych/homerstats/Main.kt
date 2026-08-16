@@ -1,6 +1,5 @@
 package io.github.dmytrozinkevych.homerstats
 
-import io.github.dmytrozinkevych.homerstats.Utils.toMetrics
 import io.github.dmytrozinkevych.homerstats.model.ClimateTelemetryPayload
 import io.ktor.client.*
 import io.ktor.http.*
