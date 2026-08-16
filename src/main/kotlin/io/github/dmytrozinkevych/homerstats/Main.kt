@@ -2,10 +2,10 @@ package io.github.dmytrozinkevych.homerstats
 
 import io.github.dmytrozinkevych.homerstats.model.ClimateTelemetryPayload
 import io.github.dmytrozinkevych.homerstats.model.VmMetricSeries
+import io.ktor.client.*
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.application.*
-import io.ktor.server.cio.*
 import io.ktor.server.engine.*
 import io.ktor.server.plugins.contentnegotiation.*
 import io.ktor.server.request.*
@@ -16,10 +16,11 @@ import java.time.Instant
 private const val PORT = 8000
 private const val VM_IMPORT_URL = "http://localhost:8428/api/v1/import"
 
-private val metricsSender = MetricsSender(VM_IMPORT_URL)
+private val httpClient = HttpClient(io.ktor.client.engine.cio.CIO)
+private val metricsSender = MetricsSender(VM_IMPORT_URL, httpClient)
 
 fun main() {
-    embeddedServer(CIO, port = PORT) {
+    embeddedServer(io.ktor.server.cio.CIO, port = PORT) {
         // Enable JSON deserialization
         install(ContentNegotiation) {
             json()
