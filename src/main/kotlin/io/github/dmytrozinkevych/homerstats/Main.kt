@@ -33,11 +33,12 @@ fun main() {
                 val metrics = payload.toMetrics()
                 try {
                     val response = metricsSender.sendMetrics(metrics)
-                    println("Successfully sent metrics to VictoriaMetrics: $response")
-                    if (response.status.isSuccess()) {
+                    val status = response.status
+                    println("Successfully sent metrics to VictoriaMetrics: $status")
+                    if (status.isSuccess()) {
                         call.respond(HttpStatusCode.NoContent)
                     } else {
-                        call.respond(response.status)
+                        call.respond(status)
                     }
                 } catch (e: Exception) {
                     println("Failed to send metrics: ${e.message}")
