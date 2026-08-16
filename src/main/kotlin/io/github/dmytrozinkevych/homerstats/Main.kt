@@ -1,50 +1,63 @@
 package io.github.dmytrozinkevych.homerstats
 
+import io.github.dmytrozinkevych.homerstats.model.ClimateTelemetryPayload
+import io.github.oshai.kotlinlogging.KotlinLogging
+import io.ktor.client.*
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.application.*
-import io.ktor.server.cio.*
 import io.ktor.server.engine.*
+import io.ktor.server.plugins.calllogging.*
 import io.ktor.server.plugins.contentnegotiation.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
-import java.io.File
+import org.slf4j.event.Level
 
-@Serializable
-data class ClimateTelemetryPayload(
-    val timestamp: String,
-    val temperature: Float,
-    val humidity: Int
-)
+private val logger = KotlinLogging.logger {}
 
-private const val PORT = 8000;
+private const val PORT = 8000
+private const val VM_IMPORT_URL = "http://localhost:8428/api/v1/import"
 
-private val telemetryFile = File("telemetry_data.jsonl")
+private val httpClient = HttpClient(io.ktor.client.engine.cio.CIO)
+private val metricsSender = MetricsSender(VM_IMPORT_URL, httpClient)
 
 fun main() {
-    embeddedServer(CIO, port = PORT) {
-        // Enable JSON deserialization
+    embeddedServer(io.ktor.server.cio.CIO, port = PORT) {
+
+        install(CallLogging) {
+            level = Level.INFO
+        }
+
         install(ContentNegotiation) {
-            json()
+            // Enable JSON deserialization
+            json(Json {
+                ignoreUnknownKeys = true
+            })
         }
 
         routing {
             post ("/api/climate-telemetry") {
                 val payload = call.receive<ClimateTelemetryPayload>()
-
-                val jsonLine = Json.encodeToString(payload) + "\n"
-                synchronized(telemetryFile) {
-                    telemetryFile.appendText(jsonLine)
+                logger.info { "Received climate telemetry: $payload" }
+                val metrics = payload.toMetrics()
+                try {
+                    val response = metricsSender.sendMetrics(metrics)
+                    if (response.status.isSuccess()) {
+                        call.respond(HttpStatusCode.NoContent)
+                    } else {
+                        call.respond(response.status)
+                    }
+                } catch (e: Exception) {
+                    logger.error(e) { "Failed to send metrics" }
+                    call.respond(HttpStatusCode.InternalServerError, "Failed to send metrics")
                 }
-
-                with (payload) {
-                    println("[$timestamp] Recorded: Temperature=$temperature°C, Humidity=$humidity%")
-                }
-                call.respond(HttpStatusCode.OK)
             }
+        }
+
+        monitor.subscribe(ApplicationStopped) {
+            httpClient.close()
         }
     }.start(wait = true)
 }
