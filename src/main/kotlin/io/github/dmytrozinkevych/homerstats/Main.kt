@@ -46,5 +46,9 @@ fun main() {
                 }
             }
         }
+
+        monitor.subscribe(ApplicationStopped) {
+            httpClient.close()
+        }
     }.start(wait = true)
 }
