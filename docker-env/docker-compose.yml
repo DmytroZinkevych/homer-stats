@@ -1,0 +1,77 @@
+services:
+  homebridge:
+    image: homebridge/homebridge:latest # sha256:f2f5b3282a2ea4125f104bf6536b7c132cf331c23bfa7b407313bc3bf04589f7
+    container_name: homebridge
+    restart: unless-stopped
+    # network_mode: host  # Disabled because of issues with UI access
+    ports:
+      - "8581:8581"       # UI
+      - "51234:51234"     # HomeKit pairing port
+    environment:
+      - TZ=Europe/Warsaw
+      - HOMEBRIDGE_CONFIG_UI=1              # MANDATORY when using mapped ports (Bridge mode)
+      - HOMEBRIDGE_CONFIG_UI_HOST=0.0.0.0   # Forces IPv4 binding for UI (bypasses config.json manual edits)
+      - ENABLE_AVAHI=0                      # Disables container-level mDNS conflict
+    volumes:
+      - ./volumes/homebridge:/homebridge
+    logging:
+      driver: json-file
+      options:
+        max-size: "10mb"
+        max-file: "1"
+
+  victoriametrics:
+    image: victoriametrics/victoria-metrics:latest # sha256:13b8951e35bb3589626816538483127785a9d8b53f9f5123769db0fcab1d961f
+    container_name: victoriametrics
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8428:8428"   # Only accessible internally
+    environment:
+      - TZ=Europe/Warsaw
+    volumes:
+      - ./volumes/victoria-metrics-data:/victoria-metrics-data
+      - ./prometheus.yml:/etc/prometheus.yml:ro
+    command:
+      - "--storageDataPath=/victoria-metrics-data"
+      - "--httpListenAddr=:8428"
+      - "--retentionPeriod=2y"
+      - "--promscrape.config=/etc/prometheus.yml"
+    logging:
+      driver: json-file
+      options:
+        max-size: "10mb"
+        max-file: "1"
+
+  node_exporter:
+    image: quay.io/prometheus/node-exporter:latest # sha256:1b4e4438faca4dd7e001dd445d161a4a2091b0fededa84093b3a8dfeae1f1be0
+    container_name: node_exporter
+    command:
+      - '--path.rootfs=/host'
+    network_mode: host
+    pid: host
+    restart: unless-stopped
+    environment:
+      - TZ=Europe/Warsaw
+    volumes:
+      - '/:/host:ro,rslave'
+    logging:
+      driver: json-file
+      options:
+        max-size: "10mb"
+        max-file: "1"
+
+  grafana:
+    image: grafana/grafana:latest # sha256:ab5cb380e3ff3172d6c8bd2e7cfd31cce977d2881b260e1f5bc089bf0b759b43
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - TZ=Europe/Warsaw
+    volumes:
+      - ./volumes/grafana:/var/lib/grafana
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: "10mb"
+        max-file: "1"
