@@ -12,6 +12,7 @@ import io.ktor.server.plugins.contentnegotiation.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import kotlinx.serialization.json.Json
 import org.slf4j.event.Level
 
 private val logger = KotlinLogging.logger {}
@@ -30,7 +31,10 @@ fun main() {
         }
 
         install(ContentNegotiation) {
-            json() // Enable JSON deserialization
+            // Enable JSON deserialization
+            json(Json {
+                ignoreUnknownKeys = true
+            })
         }
 
         routing {
