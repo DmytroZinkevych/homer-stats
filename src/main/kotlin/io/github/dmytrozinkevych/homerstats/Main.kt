@@ -1,33 +1,47 @@
 package io.github.dmytrozinkevych.homerstats
 
+import io.ktor.client.*
+import io.ktor.client.request.*
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.application.*
-import io.ktor.server.cio.*
 import io.ktor.server.engine.*
-import io.ktor.server.plugins.contentnegotiation.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
-import java.io.File
 
 @Serializable
 data class ClimateTelemetryPayload(
-    val timestamp: String,
+    val timestamp: String, // ISO 8601 format
     val temperature: Float,
     val humidity: Int
 )
 
-private const val PORT = 8000;
+// Matches VictoriaMetrics /api/v1/import endpoint
+@Serializable
+data class VmMetricSeries(
+    val metric: Map<String, String>,
+    val values: List<Float>,
+    val timestamps: List<Long> // Epoch milliseconds
+)
 
-private val telemetryFile = File("telemetry_data.jsonl")
+private const val PORT = 8000
+private const val VM_IMPORT_URL = "http://localhost:8428/api/v1/import"
+
+private val jsonSerializer = Json { encodeDefaults = true }
+
+private val httpClient = HttpClient(io.ktor.client.engine.cio.CIO) {
+    install(io.ktor.client.plugins.contentnegotiation.ContentNegotiation) {
+        json()
+    }
+}
 
 fun main() {
-    embeddedServer(CIO, port = PORT) {
+    embeddedServer(io.ktor.server.cio.CIO, port = PORT) {
         // Enable JSON deserialization
-        install(ContentNegotiation) {
+        install(io.ktor.server.plugins.contentnegotiation.ContentNegotiation) {
             json()
         }
 
@@ -35,15 +49,48 @@ fun main() {
             post ("/api/climate-telemetry") {
                 val payload = call.receive<ClimateTelemetryPayload>()
 
-                val jsonLine = Json.encodeToString(payload) + "\n"
-                synchronized(telemetryFile) {
-                    telemetryFile.appendText(jsonLine)
+                with (payload) {
+                    println("Received metrics: Timestamp=$timestamp Temperature=$temperature°C, Humidity=$humidity%")
                 }
 
-                with (payload) {
-                    println("[$timestamp] Recorded: Temperature=$temperature°C, Humidity=$humidity%")
+                val epochMillis = try {
+                    java.time.Instant.parse(payload.timestamp).toEpochMilli()
+                } catch (_: Exception) {
+                    System.currentTimeMillis()
                 }
-                call.respond(HttpStatusCode.OK)
+
+                val tempMetric = VmMetricSeries(
+                    metric = mapOf(
+                        "__name__" to "home_temperature_celsius"
+                    ),
+                    values = listOf(payload.temperature),
+                    timestamps = listOf(epochMillis)
+                )
+                val humidityMetric = VmMetricSeries(
+                    metric = mapOf(
+                        "__name__" to "home_humidity_percents"
+                    ),
+                    values = listOf(payload.humidity.toFloat()),
+                    timestamps = listOf(epochMillis)
+                )
+                val ndjsonPayload = listOf(tempMetric, humidityMetric)
+                    .joinToString("\n") { jsonSerializer.encodeToString(it) }
+
+                try {
+                    val response = httpClient.post(VM_IMPORT_URL) {
+                        contentType(ContentType.parse("application/stream+json"))
+                        setBody(ndjsonPayload)
+                    }
+                    println("Successfully sent metrics to VictoriaMetrics: $response")
+                    if (response.status.isSuccess()) {
+                        call.respond(HttpStatusCode.NoContent)
+                    } else {
+                        call.respond(response.status)
+                    }
+                } catch (e: Exception) {
+                    println("Failed to send metrics: ${e.message}")
+                    call.respond(HttpStatusCode.InternalServerError, "Failed to send metrics")
+                }
             }
         }
     }.start(wait = true)
