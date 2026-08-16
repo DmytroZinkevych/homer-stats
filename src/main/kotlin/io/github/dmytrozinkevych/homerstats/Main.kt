@@ -1,5 +1,7 @@
 package io.github.dmytrozinkevych.homerstats
 
+import io.github.dmytrozinkevych.homerstats.model.ClimateTelemetryPayload
+import io.github.dmytrozinkevych.homerstats.model.VmMetricSeries
 import io.ktor.client.*
 import io.ktor.client.request.*
 import io.ktor.http.*
@@ -9,23 +11,7 @@ import io.ktor.server.engine.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
-
-@Serializable
-data class ClimateTelemetryPayload(
-    val timestamp: String, // ISO 8601 format
-    val temperature: Float,
-    val humidity: Int
-)
-
-// Matches VictoriaMetrics /api/v1/import endpoint
-@Serializable
-data class VmMetricSeries(
-    val metric: Map<String, String>,
-    val values: List<Float>,
-    val timestamps: List<Long> // Epoch milliseconds
-)
 
 private const val PORT = 8000
 private const val VM_IMPORT_URL = "http://localhost:8428/api/v1/import"
