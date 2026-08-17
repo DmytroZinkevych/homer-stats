@@ -28,6 +28,8 @@ services:
       - "127.0.0.1:8428:8428"   # Only accessible internally
     environment:
       - TZ=Europe/Warsaw
+    extra_hosts:
+      - "host.docker.internal:host-gateway"  # Maps host.docker.internal to Pi's bridge IP
     volumes:
       - ./volumes/victoria-metrics-data:/victoria-metrics-data
       - ./prometheus.yml:/etc/prometheus.yml:ro
