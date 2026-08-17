@@ -15,15 +15,16 @@ import io.ktor.server.routing.*
 import kotlinx.serialization.json.Json
 import org.slf4j.event.Level
 
+
 private val logger = KotlinLogging.logger {}
 
 private const val PORT = 8000
 private const val VM_IMPORT_URL = "http://localhost:8428/api/v1/import"
 
-private val httpClient = HttpClient(io.ktor.client.engine.cio.CIO)
-private val metricsSender = MetricsSender(VM_IMPORT_URL, httpClient)
-
 fun main() {
+    val httpClient = HttpClient(io.ktor.client.engine.cio.CIO)
+    val metricsSender = MetricsSender(VM_IMPORT_URL, httpClient)
+
     embeddedServer(io.ktor.server.cio.CIO, port = PORT) {
 
         install(CallLogging) {
