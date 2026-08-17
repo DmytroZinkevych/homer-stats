@@ -6,7 +6,7 @@ plugins {
 }
 
 group = "io.github.dmytrozinkevych"
-version = "0.2"
+version = "0.3"
 
 repositories {
     mavenCentral()
@@ -17,12 +17,14 @@ val logbackVersion = "1.6.3"
 val kotlinLoggingVersion = "8.0.4"
 
 dependencies {
-    implementation("io.ktor:ktor-server-core:$ktorVersion")
-    implementation("io.ktor:ktor-server-cio:$ktorVersion")
-    implementation("io.ktor:ktor-server-content-negotiation:$ktorVersion")
-    implementation("io.ktor:ktor-serialization-kotlinx-json:$ktorVersion")
-    implementation("io.ktor:ktor-client-cio:$ktorVersion")
-    implementation("io.ktor:ktor-server-call-logging:$ktorVersion")
+    implementation(platform("io.ktor:ktor-bom:$ktorVersion"))
+
+    implementation("io.ktor:ktor-server-core")
+    implementation("io.ktor:ktor-server-cio")
+    implementation("io.ktor:ktor-server-content-negotiation")
+    implementation("io.ktor:ktor-serialization-kotlinx-json")
+    implementation("io.ktor:ktor-client-cio")
+    implementation("io.ktor:ktor-server-call-logging")
 
     implementation("ch.qos.logback:logback-classic:$logbackVersion")
     implementation("io.github.oshai:kotlin-logging-jvm:$kotlinLoggingVersion")
