@@ -15,7 +15,6 @@ import io.ktor.server.routing.*
 import kotlinx.serialization.json.Json
 import org.slf4j.event.Level
 
-
 private val logger = KotlinLogging.logger {}
 
 private const val PORT = 8000
