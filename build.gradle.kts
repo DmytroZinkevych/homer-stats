@@ -30,6 +30,10 @@ dependencies {
     implementation("io.github.oshai:kotlin-logging-jvm:$kotlinLoggingVersion")
 
     testImplementation(kotlin("test"))
+
+    testImplementation("io.ktor:ktor-server-test-host")
+    testImplementation("io.ktor:ktor-client-mock")
+    testImplementation("io.ktor:ktor-client-content-negotiation")
 }
 
 kotlin {
