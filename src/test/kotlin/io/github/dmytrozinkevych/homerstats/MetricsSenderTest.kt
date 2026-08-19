@@ -13,6 +13,7 @@ class MetricsSenderTest {
 
     @Test
     fun `formats metrics as NDJSON and sets stream-json content type`() = runTest {
+        // Given
         var capturedBody = ""
         var capturedContentType: ContentType? = null
 
@@ -46,8 +47,10 @@ class MetricsSenderTest {
             )
         )
 
+        // When
         val response = sender.sendMetrics(series)
 
+        // Then
         assertEquals(HttpStatusCode.NoContent, response.status)
         assertEquals(ContentType.parse("application/stream+json"), capturedContentType)
 
