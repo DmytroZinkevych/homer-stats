@@ -21,43 +21,52 @@ private const val PORT = 8000
 private const val VM_IMPORT_URL = "http://localhost:8428/api/v1/import"
 
 fun main() {
+    embeddedServer(
+        factory = io.ktor.server.cio.CIO,
+        port = PORT,
+        module = Application::module
+    ).start(wait = true)
+}
+
+fun Application.module() {
     val httpClient = HttpClient(io.ktor.client.engine.cio.CIO)
     val metricsSender = MetricsSender(VM_IMPORT_URL, httpClient)
 
-    embeddedServer(io.ktor.server.cio.CIO, port = PORT) {
+    monitor.subscribe(ApplicationStopped) {
+        httpClient.close()
+    }
 
-        install(CallLogging) {
-            level = Level.INFO
-        }
+    install(CallLogging) {
+        level = Level.INFO
+    }
 
-        install(ContentNegotiation) {
-            // Enable JSON deserialization
-            json(Json {
-                ignoreUnknownKeys = true
-            })
-        }
+    install(ContentNegotiation) {
+        // Enable JSON deserialization
+        json(Json {
+            ignoreUnknownKeys = true
+        })
+    }
 
-        routing {
-            post ("/api/climate-telemetry") {
-                val payload = call.receive<ClimateTelemetryPayload>()
-                logger.info { "Received climate telemetry: $payload" }
-                val metrics = payload.toMetrics()
-                try {
-                    val response = metricsSender.sendMetrics(metrics)
-                    if (response.status.isSuccess()) {
-                        call.respond(HttpStatusCode.NoContent)
-                    } else {
-                        call.respond(response.status)
-                    }
-                } catch (e: Exception) {
-                    logger.error(e) { "Failed to send metrics" }
-                    call.respond(HttpStatusCode.InternalServerError, "Failed to send metrics")
+    configureClimateTelemetryRoute(metricsSender)
+}
+
+fun Application.configureClimateTelemetryRoute(metricsSender: MetricsSender) {
+    routing {
+        post("/api/climate-telemetry") {
+            val payload = call.receive<ClimateTelemetryPayload>()
+            logger.info { "Received climate telemetry: $payload" }
+            val metrics = payload.toMetrics()
+            try {
+                val response = metricsSender.sendMetrics(metrics)
+                if (response.status.isSuccess()) {
+                    call.respond(HttpStatusCode.NoContent)
+                } else {
+                    call.respond(response.status)
                 }
+            } catch (e: Exception) {
+                logger.error(e) { "Failed to send metrics" }
+                call.respond(HttpStatusCode.InternalServerError, "Failed to send metrics")
             }
         }
-
-        monitor.subscribe(ApplicationStopped) {
-            httpClient.close()
-        }
-    }.start(wait = true)
+    }
 }
