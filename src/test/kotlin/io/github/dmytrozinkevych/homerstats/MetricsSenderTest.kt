@@ -24,7 +24,11 @@ class MetricsSenderTest {
         }
 
         val client = HttpClient(mockEngine)
-        val sender = MetricsSender("http://localhost:8428/api/v1/import", client)
+        val sender = MetricsSender(
+            "http://localhost:8428/api/v1/import",
+            client,
+            mainJsonSerializer
+        )
 
         val series = listOf(
             VmMetricSeries(

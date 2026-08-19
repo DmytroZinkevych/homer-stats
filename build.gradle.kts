@@ -21,10 +21,10 @@ dependencies {
 
     implementation("io.ktor:ktor-server-core")
     implementation("io.ktor:ktor-server-cio")
-    implementation("io.ktor:ktor-server-content-negotiation")
-    implementation("io.ktor:ktor-serialization-kotlinx-json")
     implementation("io.ktor:ktor-client-cio")
     implementation("io.ktor:ktor-server-call-logging")
+
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json-jvm")
 
     implementation("ch.qos.logback:logback-classic:$logbackVersion")
     implementation("io.github.oshai:kotlin-logging-jvm:$kotlinLoggingVersion")

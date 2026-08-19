@@ -9,10 +9,9 @@ import kotlinx.serialization.json.Json
 
 class MetricsSender(
     private val url: String,
-    private val httpClient: HttpClient
+    private val httpClient: HttpClient,
+    private val jsonSerializer: Json
 ) {
-    private val jsonSerializer = Json { encodeDefaults = true }
-
     suspend fun sendMetrics(metrics: List<VmMetricSeries>): HttpResponse {
         val ndjsonPayload = metrics
             .joinToString("\n") {

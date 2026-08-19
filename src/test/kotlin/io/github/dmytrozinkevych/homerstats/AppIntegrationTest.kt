@@ -3,10 +3,8 @@ package io.github.dmytrozinkevych.homerstats
 import io.ktor.client.*
 import io.ktor.client.engine.mock.*
 import io.ktor.client.request.*
+import io.ktor.client.statement.*
 import io.ktor.http.*
-import io.ktor.serialization.kotlinx.json.*
-import io.ktor.server.application.*
-import io.ktor.server.plugins.contentnegotiation.*
 import io.ktor.server.testing.*
 import io.ktor.utils.io.*
 import kotlin.test.Test
@@ -29,13 +27,14 @@ class AppIntegrationTest {
                 }
             }
         }
-        val metricsSender = MetricsSender("http://localhost:8428/api/v1/import", mockHttpClient)
+        val metricsSender = MetricsSender(
+            "http://localhost:8428/api/v1/import",
+            mockHttpClient,
+            mainJsonSerializer
+        )
 
         application {
-            install(ContentNegotiation) {
-                json()
-            }
-            configureClimateTelemetryRoute(metricsSender)
+            configureClimateTelemetryRoute(metricsSender, mainJsonSerializer)
         }
 
         // When
@@ -71,17 +70,18 @@ class AppIntegrationTest {
         val mockHttpClient = HttpClient(MockEngine) {
             engine {
                 addHandler {
-                    respond("Internal Server Error", HttpStatusCode.InternalServerError)
+                    respond("Bad Gateway", HttpStatusCode.BadGateway)
                 }
             }
         }
-        val metricsSender = MetricsSender("http://localhost:8428/api/v1/import", mockHttpClient)
+        val metricsSender = MetricsSender(
+            "http://localhost:8428/api/v1/import",
+            mockHttpClient,
+            mainJsonSerializer
+        )
 
         application {
-            install(ContentNegotiation) {
-                json()
-            }
-            configureClimateTelemetryRoute(metricsSender)
+            configureClimateTelemetryRoute(metricsSender, mainJsonSerializer)
         }
 
         // When
@@ -102,5 +102,47 @@ class AppIntegrationTest {
 
         // Then
         assertEquals(HttpStatusCode.InternalServerError, response.status)
+        assertEquals("Failed to persist metrics", response.bodyAsText())
+    }
+
+    @Test
+    fun `POST climate-telemetry returns 400 when receives malformed payload`() = testApplication {
+        // Given
+        val mockHttpClient = HttpClient(MockEngine) {
+            engine {
+                addHandler {
+                    error("No HTTP calls should be made")
+                }
+            }
+        }
+        val metricsSender = MetricsSender(
+            "http://localhost:8428/api/v1/import",
+            mockHttpClient,
+            mainJsonSerializer
+        )
+
+        application {
+            configureClimateTelemetryRoute(metricsSender, mainJsonSerializer)
+        }
+
+        // When
+        val response = client.post("/api/climate-telemetry") {
+            contentType(ContentType.Application.Json)
+            setBody(
+                """
+                {
+                    "timestamp": "2026-08-17T19:41:33+02:00",
+                    "location": "indoor",
+                    "source": "homepod",
+                    "temperature": "cold",
+                    "humidity": 49
+                }
+                """.trimIndent()
+            )
+        }
+
+        // Then
+        assertEquals(HttpStatusCode.BadRequest, response.status)
+        assertEquals("Invalid JSON payload", response.bodyAsText())
     }
 }
