@@ -11,6 +11,7 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import kotlinx.serialization.json.Json
+import org.owasp.encoder.Encode
 import org.slf4j.event.Level
 
 private val logger = KotlinLogging.logger {}
@@ -57,7 +58,9 @@ fun Application.configureClimateTelemetryRoute(
             val payload = try {
                 jsonSerializer.decodeFromString<ClimateTelemetryPayload>(rawText)
             } catch (e: Exception) {
-                logger.warn(e) { "Failed to parse climate telemetry payload. Raw body: '$rawText'" }
+                logger.warn(e) {
+                    "Failed to parse climate telemetry payload. Raw body: '${Encode.forJava(rawText)}'"
+                }
                 call.respond(HttpStatusCode.BadRequest, "Invalid JSON payload")
                 return@post
             }

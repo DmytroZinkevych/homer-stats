@@ -15,6 +15,7 @@ repositories {
 val ktorVersion = "3.5.2"
 val logbackVersion = "1.6.3"
 val kotlinLoggingVersion = "8.0.4"
+val owaspEncoderVersion = "1.4.0"
 
 dependencies {
     implementation(platform("io.ktor:ktor-bom:$ktorVersion"))
@@ -28,6 +29,8 @@ dependencies {
 
     implementation("ch.qos.logback:logback-classic:$logbackVersion")
     implementation("io.github.oshai:kotlin-logging-jvm:$kotlinLoggingVersion")
+
+    implementation("org.owasp.encoder:encoder:$owaspEncoderVersion")
 
     testImplementation(kotlin("test"))
 
