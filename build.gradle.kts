@@ -24,6 +24,7 @@ dependencies {
     implementation("io.ktor:ktor-server-cio")
     implementation("io.ktor:ktor-client-cio")
     implementation("io.ktor:ktor-server-call-logging")
+    implementation("io.ktor:ktor-server-body-limit")
 
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json-jvm")
 

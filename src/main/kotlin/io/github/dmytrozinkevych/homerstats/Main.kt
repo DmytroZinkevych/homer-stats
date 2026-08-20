@@ -7,6 +7,7 @@ import io.ktor.client.*
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.engine.*
+import io.ktor.server.plugins.bodylimit.*
 import io.ktor.server.plugins.calllogging.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
@@ -47,6 +48,12 @@ fun Application.module() {
         level = Level.INFO
     }
 
+    install(RequestBodyLimit) {
+        bodyLimit {
+            MAX_PAYLOAD_BYTES
+        }
+    }
+
     configureClimateTelemetryRoute(metricsSender, mainJsonSerializer)
 }
 
@@ -56,18 +63,7 @@ fun Application.configureClimateTelemetryRoute(
 ) {
     routing {
         post("/api/climate-telemetry") {
-            val contentLength = call.request.headers[HttpHeaders.ContentLength]?.toLongOrNull()
-            if (contentLength != null && contentLength > MAX_PAYLOAD_BYTES) {
-                call.respond(HttpStatusCode.PayloadTooLarge, "Payload exceeds limit")
-                return@post
-            }
-            val rawText = call.receiveText()
-            if (rawText.length > MAX_PAYLOAD_BYTES) {
-                call.respond(HttpStatusCode.PayloadTooLarge, "Payload exceeds limit")
-                return@post
-            }
-
-            val telemetryPayload = parsePayload(rawText, jsonSerializer)
+            val telemetryPayload = parsePayload(call.receiveText(), jsonSerializer)
             if (telemetryPayload == null) {
                 call.respond(HttpStatusCode.BadRequest, "Invalid JSON payload")
                 return@post
