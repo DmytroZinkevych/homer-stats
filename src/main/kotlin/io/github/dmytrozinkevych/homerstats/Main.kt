@@ -63,14 +63,14 @@ fun Application.configureClimateTelemetryRoute(
 ) {
     routing {
         post("/api/climate-telemetry") {
-            val telemetryPayload = parsePayload(call.receiveText(), jsonSerializer)
-            if (telemetryPayload == null) {
+            val payload = parsePayload(call.receiveText(), jsonSerializer)
+            if (payload == null) {
                 call.respond(HttpStatusCode.BadRequest, "Invalid JSON payload")
                 return@post
             }
-            logger.info { "Received climate telemetry: $telemetryPayload" }
+            logger.info { "Received climate telemetry: $payload" }
 
-            val isPersisted = metricsSender.sendAndVerify(telemetryPayload.toMetrics())
+            val isPersisted = metricsSender.sendAndVerify(payload.toMetrics())
             if (isPersisted) {
                 call.respond(HttpStatusCode.NoContent)
             } else {
@@ -83,10 +83,9 @@ fun Application.configureClimateTelemetryRoute(
 private fun parsePayload(rawText: String, jsonSerializer: Json): ClimateTelemetryPayload? =
     try {
         jsonSerializer.decodeFromString<ClimateTelemetryPayload>(rawText)
+    } catch (e: CancellationException) {
+        throw e
     } catch (e: Exception) {
-        if (e is CancellationException) {
-            throw e
-        }
         logger.warn(e) {
             "Failed to parse climate telemetry payload. Raw body: '${Encode.forJava(rawText)}'"
         }
@@ -101,10 +100,9 @@ private suspend fun MetricsSender.sendAndVerify(metrics: List<VmMetricSeries>): 
             logger.error { "Sending metrics to VictoriaMetrics failed with status: ${response.status}" }
         }
        isSuccess
+    } catch (e: CancellationException) {
+        throw e
     } catch (e: Exception) {
-        if (e is CancellationException) {
-            throw e
-        }
         logger.error(e) { "Failed to persist metrics" }
         false
     }
