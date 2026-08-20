@@ -39,7 +39,7 @@ fun ClimateTelemetryPayload.toMetrics(): List<VmMetricSeries> {
 fun String.toEpochMilli(): Long = try {
     Instant.parse(this).toEpochMilli()
 } catch (_: Exception) {
-    System.currentTimeMillis()
+    Instant.now().toEpochMilli()
 }
 
 fun validateTextField(fieldName: String, fieldValue: String) {
