@@ -10,6 +10,7 @@ import io.ktor.server.plugins.calllogging.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import kotlinx.coroutines.CancellationException
 import kotlinx.serialization.json.Json
 import org.owasp.encoder.Encode
 import org.slf4j.event.Level
@@ -18,11 +19,11 @@ private val logger = KotlinLogging.logger {}
 
 private const val PORT = 8000
 private const val VM_IMPORT_URL = "http://localhost:8428/api/v1/import"
+private const val MAX_PAYLOAD_BYTES = 65_536L // 64 KB
 
 val mainJsonSerializer = Json {
     encodeDefaults = true
     ignoreUnknownKeys = true
-    isLenient = true
 }
 
 fun main() {
@@ -54,10 +55,21 @@ fun Application.configureClimateTelemetryRoute(
 ) {
     routing {
         post("/api/climate-telemetry") {
+            val contentLength = call.request.headers[HttpHeaders.ContentLength]?.toLongOrNull()
+            if (contentLength != null && contentLength > MAX_PAYLOAD_BYTES) {
+                call.respond(HttpStatusCode.PayloadTooLarge, "Payload exceeds limit")
+                return@post
+            }
             val rawText = call.receiveText()
+            if (rawText.length > MAX_PAYLOAD_BYTES) {
+                call.respond(HttpStatusCode.PayloadTooLarge, "Payload exceeds limit")
+                return@post
+            }
+
             val payload = try {
                 jsonSerializer.decodeFromString<ClimateTelemetryPayload>(rawText)
             } catch (e: Exception) {
+                if (e is CancellationException) throw e
                 logger.warn(e) {
                     "Failed to parse climate telemetry payload. Raw body: '${Encode.forJava(rawText)}'"
                 }
@@ -65,6 +77,7 @@ fun Application.configureClimateTelemetryRoute(
                 return@post
             }
             logger.info { "Received climate telemetry: $payload" }
+
             try {
                 val response = metricsSender.sendMetrics(payload.toMetrics())
                 if (response.status.isSuccess()) {
@@ -74,6 +87,7 @@ fun Application.configureClimateTelemetryRoute(
                     call.respond(HttpStatusCode.InternalServerError, "Failed to persist metrics")
                 }
             } catch (e: Exception) {
+                if (e is CancellationException) throw e
                 logger.error(e) { "Failed to persist metrics" }
                 call.respond(HttpStatusCode.InternalServerError, "Failed to persist metrics")
             }
