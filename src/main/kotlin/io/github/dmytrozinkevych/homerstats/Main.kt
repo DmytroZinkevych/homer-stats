@@ -1,6 +1,7 @@
 package io.github.dmytrozinkevych.homerstats
 
 import io.github.dmytrozinkevych.homerstats.model.ClimateTelemetryPayload
+import io.github.dmytrozinkevych.homerstats.model.VmMetricSeries
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.*
 import io.ktor.http.*
@@ -66,31 +67,48 @@ fun Application.configureClimateTelemetryRoute(
                 return@post
             }
 
-            val payload = try {
-                jsonSerializer.decodeFromString<ClimateTelemetryPayload>(rawText)
-            } catch (e: Exception) {
-                if (e is CancellationException) throw e
-                logger.warn(e) {
-                    "Failed to parse climate telemetry payload. Raw body: '${Encode.forJava(rawText)}'"
-                }
+            val telemetryPayload = parsePayload(rawText, jsonSerializer)
+            if (telemetryPayload == null) {
                 call.respond(HttpStatusCode.BadRequest, "Invalid JSON payload")
                 return@post
             }
-            logger.info { "Received climate telemetry: $payload" }
+            logger.info { "Received climate telemetry: $telemetryPayload" }
 
-            try {
-                val response = metricsSender.sendMetrics(payload.toMetrics())
-                if (response.status.isSuccess()) {
-                    call.respond(HttpStatusCode.NoContent)
-                } else {
-                    logger.error { "Sending metrics to VictoriaMetrics failed with status: ${response.status}" }
-                    call.respond(HttpStatusCode.InternalServerError, "Failed to persist metrics")
-                }
-            } catch (e: Exception) {
-                if (e is CancellationException) throw e
-                logger.error(e) { "Failed to persist metrics" }
+            val isPersisted = metricsSender.sendAndVerify(telemetryPayload.toMetrics())
+            if (isPersisted) {
+                call.respond(HttpStatusCode.NoContent)
+            } else {
                 call.respond(HttpStatusCode.InternalServerError, "Failed to persist metrics")
             }
         }
     }
 }
+
+private fun parsePayload(rawText: String, jsonSerializer: Json): ClimateTelemetryPayload? =
+    try {
+        jsonSerializer.decodeFromString<ClimateTelemetryPayload>(rawText)
+    } catch (e: Exception) {
+        if (e is CancellationException) {
+            throw e
+        }
+        logger.warn(e) {
+            "Failed to parse climate telemetry payload. Raw body: '${Encode.forJava(rawText)}'"
+        }
+        null
+    }
+
+private suspend fun MetricsSender.sendAndVerify(metrics: List<VmMetricSeries>): Boolean =
+    try {
+        val response = this.sendMetrics(metrics)
+        val isSuccess = response.status.isSuccess()
+        if (!isSuccess) {
+            logger.error { "Sending metrics to VictoriaMetrics failed with status: ${response.status}" }
+        }
+       isSuccess
+    } catch (e: Exception) {
+        if (e is CancellationException) {
+            throw e
+        }
+        logger.error(e) { "Failed to persist metrics" }
+        false
+    }
