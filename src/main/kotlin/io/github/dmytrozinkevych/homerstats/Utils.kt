@@ -4,7 +4,6 @@ import io.github.dmytrozinkevych.homerstats.model.ClimateTelemetryPayload
 import io.github.dmytrozinkevych.homerstats.model.VmMetricSeries
 import java.time.Instant
 
-private const val METRIC_NAME_FIELD = "__name__"
 private const val LOCATION_FIELD = "location"
 private const val SOURCE_FIELD = "source"
 
@@ -16,22 +15,18 @@ private const val MAX_FIELD_LENGTH = 50
 fun ClimateTelemetryPayload.toMetrics(): List<VmMetricSeries> {
     val epochMillis = this.timestamp.toEpochMilli()
     val temperatureMetric = VmMetricSeries(
-        metric = mapOf(
-            METRIC_NAME_FIELD to TEMPERATURE_METRIC_NAME,
-            LOCATION_FIELD to this.location,
-            SOURCE_FIELD to this.source
-        ),
-        values = listOf(this.temperature),
-        timestamps = listOf(epochMillis)
+        metricName = TEMPERATURE_METRIC_NAME,
+        value = this.temperature,
+        timestamp = epochMillis,
+        LOCATION_FIELD to this.location,
+        SOURCE_FIELD to this.source
     )
     val humidityMetric = VmMetricSeries(
-        metric = mapOf(
-            METRIC_NAME_FIELD to HUMIDITY_METRIC_NAME,
-            LOCATION_FIELD to this.location,
-            SOURCE_FIELD to this.source
-        ),
-        values = listOf(this.humidity.toFloat()),
-        timestamps = listOf(epochMillis)
+        metricName = HUMIDITY_METRIC_NAME,
+        value = this.humidity.toFloat(),
+        timestamp = epochMillis,
+        LOCATION_FIELD to this.location,
+        SOURCE_FIELD to this.source
     )
     return listOf(temperatureMetric, humidityMetric)
 }
