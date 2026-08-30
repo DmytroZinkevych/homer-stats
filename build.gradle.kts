@@ -6,7 +6,7 @@ plugins {
 }
 
 group = "io.github.dmytrozinkevych"
-version = "0.3"
+version = "0.4-SNAPSHOT"
 
 repositories {
     mavenCentral()
@@ -22,9 +22,11 @@ dependencies {
 
     implementation("io.ktor:ktor-server-core")
     implementation("io.ktor:ktor-server-cio")
-    implementation("io.ktor:ktor-client-cio")
     implementation("io.ktor:ktor-server-call-logging")
     implementation("io.ktor:ktor-server-body-limit")
+
+    implementation("io.ktor:ktor-client-cio")
+    implementation("io.ktor:ktor-client-auth")
 
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json-jvm")
 
