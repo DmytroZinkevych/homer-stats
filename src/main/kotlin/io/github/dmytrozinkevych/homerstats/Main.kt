@@ -66,6 +66,7 @@ fun Application.module() {
 
     monitor.subscribe(ApplicationStopped) {
         httpClient.close()
+        airQualityPoller.close()
     }
 
     install(RequestBodyLimit) {
