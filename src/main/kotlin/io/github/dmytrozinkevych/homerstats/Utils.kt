@@ -15,8 +15,16 @@ private const val SOURCE_FIELD = "source"
 
 private const val TEMPERATURE_METRIC_NAME = "temperature_celsius"
 private const val HUMIDITY_METRIC_NAME = "humidity_percents"
+private const val PM_2_5_METRIC_NAME = "pm_2_5_density"
+
+private const val AIR_QUALITY_HOME_LOCATION = "indoor"
+private const val AIR_QUALITY_DEVICE = "mi_air_purifier_3c"
 
 private const val MAX_FIELD_LENGTH = 50
+
+fun getEnvVar(name: String): String = checkNotNull(System.getenv(name)) {
+    "Required environment variable '$name' is missing"
+}
 
 fun HttpClientConfig<*>.configTimeouts() {
     install(HttpTimeout) {
@@ -44,6 +52,16 @@ fun ClimateTelemetryPayload.toMetrics(): List<VmMetricSeries> {
     )
     return listOf(temperatureMetric, humidityMetric)
 }
+
+fun Float.toPm25Metric(timestamp: Long): List<VmMetricSeries> = listOf(
+    VmMetricSeries(
+        metricName = PM_2_5_METRIC_NAME,
+        value = this,
+        timestamp = timestamp,
+        LOCATION_FIELD to AIR_QUALITY_HOME_LOCATION,
+        SOURCE_FIELD to AIR_QUALITY_DEVICE
+    )
+)
 
 fun String.toEpochMilli(): Long = try {
     Instant.parse(this).toEpochMilli()
