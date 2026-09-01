@@ -19,9 +19,11 @@ import org.slf4j.event.Level
 
 private val logger = KotlinLogging.logger {}
 
-private const val PORT = 8000
+private const val SERVER_PORT = 8000
 private const val VM_IMPORT_URL = "http://localhost:8428/api/v1/import"
 private const val MAX_PAYLOAD_BYTES = 65_536L // 64 KB
+
+private val HTTP_SERVER_ENGINE = io.ktor.server.cio.CIO
 
 val mainJsonSerializer = Json {
     encodeDefaults = true
@@ -30,14 +32,16 @@ val mainJsonSerializer = Json {
 
 fun main() {
     embeddedServer(
-        factory = io.ktor.server.cio.CIO,
-        port = PORT,
+        factory = HTTP_SERVER_ENGINE,
+        port = SERVER_PORT,
         module = Application::module
     ).start(wait = true)
 }
 
 fun Application.module() {
-    val httpClient = HttpClient(io.ktor.client.engine.cio.CIO)
+    val httpClient = HttpClient(HTTP_CLIENT_ENGINE) {
+        configTimeouts()
+    }
     val metricsSender = MetricsSender(VM_IMPORT_URL, httpClient, mainJsonSerializer)
 
     monitor.subscribe(ApplicationStopped) {

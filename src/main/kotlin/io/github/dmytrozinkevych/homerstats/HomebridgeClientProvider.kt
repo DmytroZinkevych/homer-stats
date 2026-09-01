@@ -23,6 +23,8 @@ class HomebridgeClientProvider(
 ) {
     fun createClient(): HttpClient {
         return HttpClient(httpClientEngine) {
+            configTimeouts()
+
             install(Auth) {
                 bearer {
                     loadTokens {
@@ -39,7 +41,9 @@ class HomebridgeClientProvider(
 
     private suspend fun fetchToken(): BearerTokens? {
         // Separate unauthenticated client for auth calls to avoid infinite loops
-        HttpClient(httpClientEngine).use { authClient ->
+        HttpClient(httpClientEngine) {
+            configTimeouts()
+        }.use { authClient ->
             return try {
                 val response = authClient.post(homebridgeUrl.trimEnd('/') + LOGIN_ENDPOINT) {
                     contentType(ContentType.Application.Json)

@@ -2,7 +2,13 @@ package io.github.dmytrozinkevych.homerstats
 
 import io.github.dmytrozinkevych.homerstats.model.ClimateTelemetryPayload
 import io.github.dmytrozinkevych.homerstats.model.VmMetricSeries
+import io.ktor.client.*
+import io.ktor.client.plugins.*
 import java.time.Instant
+
+private const val REQUEST_TIMEOUT_MS = 10_000L
+private const val CONNECT_TIMEOUT_MS = 5_000L
+private const val SOCKET_TIMEOUT_MS = 5_000L
 
 private const val LOCATION_FIELD = "location"
 private const val SOURCE_FIELD = "source"
@@ -11,6 +17,14 @@ private const val TEMPERATURE_METRIC_NAME = "temperature_celsius"
 private const val HUMIDITY_METRIC_NAME = "humidity_percents"
 
 private const val MAX_FIELD_LENGTH = 50
+
+fun HttpClientConfig<*>.configTimeouts() {
+    install(HttpTimeout) {
+        requestTimeoutMillis = REQUEST_TIMEOUT_MS
+        connectTimeoutMillis = CONNECT_TIMEOUT_MS
+        socketTimeoutMillis = SOCKET_TIMEOUT_MS
+    }
+}
 
 fun ClimateTelemetryPayload.toMetrics(): List<VmMetricSeries> {
     val epochMillis = this.timestamp.toEpochMilli()
