@@ -47,7 +47,7 @@ class HomebridgeClientProviderTest {
             user = TEST_USER,
             password = TEST_PASSWORD,
             jsonSerializer = mainJsonSerializer,
-            engine = mockEngine
+            httpClientEngine = mockEngine
         ).createClient().use { client ->
 
             val response = client.get("$HOMEBRIDGE_URL/api/accessories")
@@ -102,7 +102,7 @@ class HomebridgeClientProviderTest {
             user = TEST_USER,
             password = TEST_PASSWORD,
             jsonSerializer = mainJsonSerializer,
-            engine = mockEngine
+            httpClientEngine = mockEngine
         ).createClient().use { client ->
 
             val response = client.get("$HOMEBRIDGE_URL/api/accessories")

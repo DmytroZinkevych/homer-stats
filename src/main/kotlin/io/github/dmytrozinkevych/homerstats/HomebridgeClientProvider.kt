@@ -2,7 +2,6 @@ package io.github.dmytrozinkevych.homerstats
 
 import io.ktor.client.*
 import io.ktor.client.engine.*
-import io.ktor.client.engine.cio.*
 import io.ktor.client.plugins.auth.*
 import io.ktor.client.plugins.auth.providers.*
 import io.ktor.client.request.*
@@ -20,10 +19,10 @@ class HomebridgeClientProvider(
     private val user: String,
     private val password: String,
     private val jsonSerializer: Json,
-    private val engine: HttpClientEngine = CIO.create()
+    private val httpClientEngine: HttpClientEngine
 ) {
     fun createClient(): HttpClient {
-        return HttpClient(engine) {
+        return HttpClient(httpClientEngine) {
             install(Auth) {
                 bearer {
                     loadTokens {
@@ -40,7 +39,7 @@ class HomebridgeClientProvider(
 
     private suspend fun fetchToken(): BearerTokens? {
         // Separate unauthenticated client for auth calls to avoid infinite loops
-        HttpClient(engine).use { authClient ->
+        HttpClient(httpClientEngine).use { authClient ->
             return try {
                 val response = authClient.post(homebridgeUrl.trimEnd('/') + LOGIN_ENDPOINT) {
                     contentType(ContentType.Application.Json)
