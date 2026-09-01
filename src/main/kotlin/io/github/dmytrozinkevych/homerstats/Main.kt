@@ -3,18 +3,17 @@ package io.github.dmytrozinkevych.homerstats
 import io.github.dmytrozinkevych.homerstats.model.ClimateTelemetryPayload
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.*
+import io.ktor.client.plugins.logging.*
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.engine.*
 import io.ktor.server.plugins.bodylimit.*
-import io.ktor.server.plugins.calllogging.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import kotlinx.coroutines.CancellationException
 import kotlinx.serialization.json.Json
 import org.owasp.encoder.Encode
-import org.slf4j.event.Level
 import kotlin.time.Duration.Companion.minutes
 
 private val logger = KotlinLogging.logger {}
@@ -48,6 +47,11 @@ fun main() {
 fun Application.module() {
     val httpClient = HttpClient(HTTP_CLIENT_ENGINE) {
         configTimeouts()
+
+        install(Logging) {
+            logger = Logger.DEFAULT
+            level = LogLevel.INFO
+        }
     }
     val metricsSender = MetricsSender(VM_IMPORT_URL, httpClient, mainJsonSerializer)
     val airQualityPoller = AirQualityPoller(
@@ -62,10 +66,6 @@ fun Application.module() {
 
     monitor.subscribe(ApplicationStopped) {
         httpClient.close()
-    }
-
-    install(CallLogging) {
-        level = Level.INFO
     }
 
     install(RequestBodyLimit) {

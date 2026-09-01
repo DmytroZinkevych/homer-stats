@@ -21,6 +21,7 @@ class MetricsSender(
             .joinToString("\n") {
                 jsonSerializer.encodeToString(it)
             }
+        logger.info { "Sending metrics:\n$ndjsonPayload" }
         return httpClient.post(url) {
             contentType(ContentType.parse("application/stream+json"))
             setBody(ndjsonPayload)
