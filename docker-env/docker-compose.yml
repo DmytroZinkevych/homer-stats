@@ -3,17 +3,16 @@ services:
     image: homebridge/homebridge:latest # sha256:f2f5b3282a2ea4125f104bf6536b7c132cf331c23bfa7b407313bc3bf04589f7
     container_name: homebridge
     restart: unless-stopped
-    # network_mode: host  # Disabled because of issues with UI access
-    ports:
-      - "8581:8581"       # UI
-      - "51234:51234"     # HomeKit pairing port
+    network_mode: host
     environment:
       - TZ=Europe/Warsaw
       - HOMEBRIDGE_CONFIG_UI=1              # MANDATORY when using mapped ports (Bridge mode)
+      - HOMEBRIDGE_CONFIG_UI_PORT=8581
       - HOMEBRIDGE_CONFIG_UI_HOST=0.0.0.0   # Forces IPv4 binding for UI (bypasses config.json manual edits)
       - ENABLE_AVAHI=0                      # Disables container-level mDNS conflict
     volumes:
       - ./volumes/homebridge:/homebridge
+      - /var/run/dbus:/var/run/dbus         # Grants access to host's Avahi daemon
     logging:
       driver: json-file
       options:
