@@ -18,15 +18,13 @@ class AppIntegrationTest {
         var capturedMetricsUrl = ""
         var capturedMetricsRequestBody = ""
 
-        val mockHttpClient = HttpClient(MockEngine) {
-            engine {
-                addHandler { request ->
-                    capturedMetricsUrl = request.url.toString()
-                    capturedMetricsRequestBody = request.body.toByteReadPacket().readText()
-                    respond("", HttpStatusCode.NoContent)
-                }
+        val mockHttpClient = HttpClient(
+            MockEngine { request ->
+                capturedMetricsUrl = request.url.toString()
+                capturedMetricsRequestBody = request.body.toByteReadPacket().readText()
+                respond("", HttpStatusCode.NoContent)
             }
-        }
+        )
         val metricsSender = MetricsSender(
             "http://localhost:8428/api/v1/import",
             mockHttpClient,
@@ -67,13 +65,11 @@ class AppIntegrationTest {
     @Test
     fun `POST climate-telemetry returns 500 when sending metrics fail`() = testApplication {
         // Given
-        val mockHttpClient = HttpClient(MockEngine) {
-            engine {
-                addHandler {
-                    respond("Bad Gateway", HttpStatusCode.BadGateway)
-                }
+        val mockHttpClient = HttpClient(
+            MockEngine {
+                respond("Bad Gateway", HttpStatusCode.BadGateway)
             }
-        }
+        )
         val metricsSender = MetricsSender(
             "http://localhost:8428/api/v1/import",
             mockHttpClient,
@@ -108,21 +104,8 @@ class AppIntegrationTest {
     @Test
     fun `POST climate-telemetry returns 400 when receives malformed payload`() = testApplication {
         // Given
-        val mockHttpClient = HttpClient(MockEngine) {
-            engine {
-                addHandler {
-                    error("No HTTP calls should be made")
-                }
-            }
-        }
-        val metricsSender = MetricsSender(
-            "http://localhost:8428/api/v1/import",
-            mockHttpClient,
-            mainJsonSerializer
-        )
-
         application {
-            configureClimateTelemetryRoute(metricsSender, mainJsonSerializer)
+            configureClimateTelemetryRoute(dummyMetricsSender(), mainJsonSerializer)
         }
 
         // When

@@ -43,7 +43,7 @@ class AirQualityPoller(
         }
     }
 
-    private suspend fun fetchAirQualityData(): List<VmMetricSeries>? {
+    internal suspend fun fetchAirQualityData(): List<VmMetricSeries>? {
         val response = homebridgeClient.get(homebridgeUrl.trimEnd('/') + ACCESSORIES_ENDPOINT)
         val isSuccess = response.status.isSuccess()
         if (!isSuccess) {
