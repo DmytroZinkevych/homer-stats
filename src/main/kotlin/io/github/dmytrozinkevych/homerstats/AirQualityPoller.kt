@@ -22,7 +22,7 @@ class AirQualityPoller(
     user: String,
     password: String,
     private val interval: Duration,
-    httpClientEngine: HttpClientEngine,
+    httpClientEngine: HttpClientEngineFactory<HttpClientEngineConfig>,
     jsonSerializer: Json,
     private val metricsSender: MetricsSender,
     private val homebridgeClient: HttpClient = HomebridgeClientProvider(

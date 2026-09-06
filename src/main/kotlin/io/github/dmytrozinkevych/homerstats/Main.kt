@@ -54,14 +54,14 @@ fun Application.module() {
         user = getEnvVar(HOMEBRIDGE_USER_VAR),
         password = getEnvVar(HOMEBRIDGE_PASSWORD_ENV_VAR),
         interval = AIR_QUALITY_POLLING_INTERVAL,
-        httpClientEngine = HTTP_CLIENT_ENGINE.create(),
+        httpClientEngine = HTTP_CLIENT_ENGINE,
         jsonSerializer = mainJsonSerializer,
         metricsSender = metricsSender
     )
 
     monitor.subscribe(ApplicationStopped) {
-        httpClient.close()
         airQualityPoller.close()
+        httpClient.close()
     }
 
     install(RequestBodyLimit) {

@@ -28,7 +28,7 @@ class HomebridgeClientProvider(
     private val user: String,
     private val password: String,
     private val jsonSerializer: Json,
-    private val httpClientEngine: HttpClientEngine
+    private val httpClientEngine: HttpClientEngineFactory<HttpClientEngineConfig>
 ) {
     fun createClient(): HttpClient {
         return HttpClient(httpClientEngine) {
