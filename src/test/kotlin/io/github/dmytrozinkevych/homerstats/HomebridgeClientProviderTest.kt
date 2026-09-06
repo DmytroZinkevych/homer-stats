@@ -5,7 +5,7 @@ import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.utils.io.*
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -16,7 +16,7 @@ private const val TEST_PASSWORD = "password"
 class HomebridgeClientProviderTest {
 
     @Test
-    fun `should authenticate and attach bearer token on request`() = runBlocking {
+    fun `should authenticate and attach bearer token on request`() = runTest {
         var capturedCredentials = ""
         var capturedToken: String? = null
 
@@ -61,7 +61,7 @@ class HomebridgeClientProviderTest {
     }
 
     @Test
-    fun `should execute refreshTokens on 401 Unauthorized response and cache it`() = runBlocking {
+    fun `should execute refreshTokens on 401 Unauthorized response and cache it`() = runTest {
         var tokenFetchCount = 0
         var refreshedToken: String? = null
 
