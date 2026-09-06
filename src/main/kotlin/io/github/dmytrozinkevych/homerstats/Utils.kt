@@ -22,6 +22,11 @@ private const val AIR_QUALITY_HOME_LOCATION = "indoor"
 
 private const val MAX_FIELD_LENGTH = 50
 
+private val CAMEL_CASE_REGEX = Regex("([a-z])([A-Z])")
+private val LETTER_TO_DIGIT_REGEX = Regex("([a-z])([0-9])") // expects lowercased input
+private val DIGIT_TO_LETTER_REGEX = Regex("([0-9])([a-z])") // expects lowercased input
+private val NON_ALPHANUMERIC_REGEX = Regex("[^a-z0-9]+") // expects lowercased input
+
 fun getEnvVar(name: String): String = checkNotNull(System.getenv(name)) {
     "Required environment variable '$name' is missing"
 }
@@ -47,15 +52,15 @@ fun ClimateTelemetryPayload.toMetrics(): List<MetricSeries> {
         metricName = TEMPERATURE_METRIC_NAME,
         value = this.temperature,
         timestamp = epochMillis,
-        LOCATION_FIELD to this.location,
-        SOURCE_FIELD to this.source
+        LOCATION_FIELD to this.location.formatForMetric(),
+        SOURCE_FIELD to this.source.formatForMetric()
     )
     val humidityMetric = MetricSeries(
         metricName = HUMIDITY_METRIC_NAME,
         value = this.humidity.toFloat(),
         timestamp = epochMillis,
-        LOCATION_FIELD to this.location,
-        SOURCE_FIELD to this.source
+        LOCATION_FIELD to this.location.formatForMetric(),
+        SOURCE_FIELD to this.source.formatForMetric()
     )
     return listOf(temperatureMetric, humidityMetric)
 }
@@ -65,8 +70,8 @@ fun Float.toPm25Metric(timestamp: Long, source: String): List<MetricSeries> = li
         metricName = PM_2_5_METRIC_NAME,
         value = this,
         timestamp = timestamp,
-        LOCATION_FIELD to AIR_QUALITY_HOME_LOCATION,
-        SOURCE_FIELD to source
+        LOCATION_FIELD to AIR_QUALITY_HOME_LOCATION.formatForMetric(),
+        SOURCE_FIELD to source.formatForMetric()
     )
 )
 
@@ -90,3 +95,14 @@ fun validateTextField(fieldName: String, fieldValue: String) {
 
 fun String.containsNewlines() =
     this.contains('\n') || this.contains('\r')
+
+fun String?.formatForMetric(defaultIfBlank: String = "unknown"): String =
+    this
+        ?.replace(CAMEL_CASE_REGEX, "$1_$2")
+        ?.lowercase()
+        ?.replace(LETTER_TO_DIGIT_REGEX, "$1_$2")
+        ?.replace(DIGIT_TO_LETTER_REGEX, "$1_$2")
+        ?.replace(NON_ALPHANUMERIC_REGEX, "_")
+        ?.trim('_')
+        ?.ifBlank { defaultIfBlank }
+        ?: defaultIfBlank

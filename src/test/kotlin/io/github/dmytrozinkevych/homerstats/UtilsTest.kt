@@ -40,4 +40,15 @@ class UtilsTest {
         val generatedTimestamp = metrics[0].timestamps.first()
         assertTrue(generatedTimestamp in beforeTest..afterTest)
     }
+
+    @Test
+    fun `formats various strings correctly for metric source labels`() {
+        assertEquals("my_air_purifier_3_c_a_4", "@@@ My Air_Purifier 3C A4 ~~~".formatForMetric())
+        assertEquals("user_s_air_purifier_3_c", "User's AirPurifier3C".formatForMetric())
+        assertEquals("living_room_sensor_01", "livingRoom___Sensor01".formatForMetric())
+
+        assertEquals("unknown", null.formatForMetric())
+        assertEquals("unknown", "".formatForMetric())
+        assertEquals("unknown", "@@@ ~~~ ###".formatForMetric())
+    }
 }

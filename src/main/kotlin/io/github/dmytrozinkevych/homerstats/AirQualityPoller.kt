@@ -8,6 +8,7 @@ import io.ktor.client.statement.*
 import io.ktor.http.*
 import kotlinx.coroutines.*
 import kotlinx.serialization.json.*
+import org.owasp.encoder.Encode
 import kotlin.time.Duration
 
 private val logger = KotlinLogging.logger {}
@@ -86,14 +87,10 @@ class AirQualityPoller(
             ?.get(NAME_FIELD)
             ?.jsonPrimitive
             ?.contentOrNull
-            ?.replace(Regex("([a-z0-9])([A-Z])"), "$1_$2")
-            ?.lowercase()
-            ?.replace(Regex("[^a-z0-9]+"), "_")
-            ?.trim('_')
             ?: DEFAULT_SOURCE_NAME
 
         val timestamp = response.responseTime.timestamp
-        logger.info { "Fetched PM 2.5 value: $pm25Value for device '$sourceName', timestamp: $timestamp" }
+        logger.info { "Fetched PM 2.5 value: $pm25Value for device '${Encode.forJava(sourceName)}', timestamp: $timestamp" }
 
         return pm25Value.toPm25Metric(timestamp, sourceName)
     }
