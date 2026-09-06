@@ -21,7 +21,7 @@ private val interval = 5.seconds
 
 class AirQualityPollerTest {
     @Test
-    fun `fetches PM 2_5 metric from active device and pushes to VictoriaMetrics`() = runTest {
+    fun `fetches PM 2_5 metric from active device and pushes to VictoriaMetrics`() = runTest(timeout = 3.seconds) {
         // Given
         var capturedHomebridgeUrl = ""
         val receivedMetricChannel = Channel<String>(capacity = 1)
@@ -32,6 +32,9 @@ class AirQualityPollerTest {
                 content = """
                 [
                     {
+                        "accessoryInformation": {
+                            "Name": "@@@ My-AirPurifier @@@"
+                        },
                         "values": {
                             "StatusActive": 1,
                             "PM2_5Density": 7
@@ -63,7 +66,7 @@ class AirQualityPollerTest {
         val capturedMetric = receivedMetricChannel.receive()
 
         // Then
-        val expectedMetricSnippet = """"__name__":"pm_2_5_density","location":"indoor","source":"mi_air_purifier_3c""""
+        val expectedMetricSnippet = """"__name__":"pm_2_5_density","location":"indoor","source":"my_air_purifier""""
         val expectedValueSnippet = """"values":[7.0]"""
 
         assertEquals("http://localhost:8581/api/accessories", capturedHomebridgeUrl)
@@ -82,6 +85,9 @@ class AirQualityPollerTest {
                 content = """
                 [
                     {
+                        "accessoryInformation": {
+                            "Name": "@@@ My Air-Purifier @@@"
+                        },
                         "values": {
                             "StatusActive": 0,
                             "PM2_5Density": 0
