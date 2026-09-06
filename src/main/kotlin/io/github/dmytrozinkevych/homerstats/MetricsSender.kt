@@ -1,6 +1,6 @@
 package io.github.dmytrozinkevych.homerstats
 
-import io.github.dmytrozinkevych.homerstats.model.VmMetricSeries
+import io.github.dmytrozinkevych.homerstats.model.MetricSeries
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.*
 import io.ktor.client.request.*
@@ -16,7 +16,7 @@ class MetricsSender(
     private val httpClient: HttpClient,
     private val jsonSerializer: Json
 ) {
-    internal suspend fun sendMetrics(metrics: List<VmMetricSeries>): HttpResponse {
+    internal suspend fun sendMetrics(metrics: List<MetricSeries>): HttpResponse {
         val ndjsonPayload = metrics
             .joinToString("\n") {
                 jsonSerializer.encodeToString(it)
@@ -28,7 +28,7 @@ class MetricsSender(
         }
     }
 
-    suspend fun sendAndVerify(metrics: List<VmMetricSeries>): Boolean =
+    suspend fun sendAndVerify(metrics: List<MetricSeries>): Boolean =
         try {
             val response = this.sendMetrics(metrics)
             val isSuccess = response.status.isSuccess()

@@ -6,7 +6,7 @@ private const val METRIC_NAME_FIELD = "__name__"
 
 // Matches VictoriaMetrics /api/v1/import endpoint
 @Serializable
-data class VmMetricSeries(
+data class MetricSeries(
     val metric: Map<String, String>,
     val values: List<Float>,
     val timestamps: List<Long> // Epoch milliseconds

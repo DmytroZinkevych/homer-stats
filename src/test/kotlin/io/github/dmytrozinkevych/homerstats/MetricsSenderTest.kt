@@ -1,6 +1,6 @@
 package io.github.dmytrozinkevych.homerstats
 
-import io.github.dmytrozinkevych.homerstats.model.VmMetricSeries
+import io.github.dmytrozinkevych.homerstats.model.MetricSeries
 import io.ktor.client.*
 import io.ktor.client.engine.mock.*
 import io.ktor.http.*
@@ -31,7 +31,7 @@ class MetricsSenderTest {
             )
 
             val series = listOf(
-                VmMetricSeries(
+                MetricSeries(
                     mapOf(
                         "__name__" to "temperature_celsius",
                         "location" to "indoor",
@@ -40,7 +40,7 @@ class MetricsSenderTest {
                     listOf(22.5f),
                     listOf(1786988493000L)
                 ),
-                VmMetricSeries(
+                MetricSeries(
                     mapOf(
                         "__name__" to "humidity_percents",
                         "location" to "indoor",

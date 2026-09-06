@@ -1,6 +1,6 @@
 package io.github.dmytrozinkevych.homerstats
 
-import io.github.dmytrozinkevych.homerstats.model.VmMetricSeries
+import io.github.dmytrozinkevych.homerstats.model.MetricSeries
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.*
 import io.ktor.client.request.*
@@ -43,7 +43,7 @@ class AirQualityPoller(
         }
     }
 
-    internal suspend fun fetchAirQualityData(): List<VmMetricSeries>? {
+    internal suspend fun fetchAirQualityData(): List<MetricSeries>? {
         val response = homebridgeClient.get(homebridgeUrl.trimEnd('/') + ACCESSORIES_ENDPOINT)
         val isSuccess = response.status.isSuccess()
         if (!isSuccess) {

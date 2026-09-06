@@ -1,7 +1,7 @@
 package io.github.dmytrozinkevych.homerstats
 
 import io.github.dmytrozinkevych.homerstats.model.ClimateTelemetryPayload
-import io.github.dmytrozinkevych.homerstats.model.VmMetricSeries
+import io.github.dmytrozinkevych.homerstats.model.MetricSeries
 import io.ktor.client.*
 import io.ktor.client.plugins.*
 import io.ktor.client.plugins.logging.*
@@ -42,16 +42,16 @@ fun HttpClientConfig<*>.configLogging() {
     }
 }
 
-fun ClimateTelemetryPayload.toMetrics(): List<VmMetricSeries> {
+fun ClimateTelemetryPayload.toMetrics(): List<MetricSeries> {
     val epochMillis = this.timestamp.toEpochMilli()
-    val temperatureMetric = VmMetricSeries(
+    val temperatureMetric = MetricSeries(
         metricName = TEMPERATURE_METRIC_NAME,
         value = this.temperature,
         timestamp = epochMillis,
         LOCATION_FIELD to this.location,
         SOURCE_FIELD to this.source
     )
-    val humidityMetric = VmMetricSeries(
+    val humidityMetric = MetricSeries(
         metricName = HUMIDITY_METRIC_NAME,
         value = this.humidity.toFloat(),
         timestamp = epochMillis,
@@ -61,8 +61,8 @@ fun ClimateTelemetryPayload.toMetrics(): List<VmMetricSeries> {
     return listOf(temperatureMetric, humidityMetric)
 }
 
-fun Float.toPm25Metric(timestamp: Long): List<VmMetricSeries> = listOf(
-    VmMetricSeries(
+fun Float.toPm25Metric(timestamp: Long): List<MetricSeries> = listOf(
+    MetricSeries(
         metricName = PM_2_5_METRIC_NAME,
         value = this,
         timestamp = timestamp,
