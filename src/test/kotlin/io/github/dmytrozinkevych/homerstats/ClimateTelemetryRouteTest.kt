@@ -10,7 +10,7 @@ import io.ktor.utils.io.*
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-class AppIntegrationTest {
+class ClimateTelemetryRouteTest {
 
     @Test
     fun `POST climate-telemetry sends metrics and returns 204 NoContent on success`() = testApplication {
