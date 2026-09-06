@@ -59,7 +59,7 @@ class HomebridgeClientProvider(
             return try {
                 val response = authClient.post(homebridgeUrl.trimEnd('/') + LOGIN_ENDPOINT) {
                     contentType(ContentType.Application.Json)
-                    setBody(AuthRequest(user, password))
+                    setBody(jsonSerializer.encodeToString(AuthRequest(user, password)))
                 }
                 if (response.status.isSuccess()) {
                     val token = jsonSerializer.parseToJsonElement(response.bodyAsText())
