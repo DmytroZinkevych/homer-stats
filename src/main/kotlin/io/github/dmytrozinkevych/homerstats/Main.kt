@@ -47,11 +47,7 @@ fun main() {
 fun Application.module() {
     val httpClient = HttpClient(HTTP_CLIENT_ENGINE) {
         configTimeouts()
-
-        install(Logging) {
-            logger = Logger.DEFAULT
-            level = LogLevel.INFO
-        }
+        configLogging()
     }
     val metricsSender = MetricsSender(VM_IMPORT_URL, httpClient, mainJsonSerializer)
     val airQualityPoller = AirQualityPoller(

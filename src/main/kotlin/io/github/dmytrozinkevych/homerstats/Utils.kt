@@ -4,6 +4,7 @@ import io.github.dmytrozinkevych.homerstats.model.ClimateTelemetryPayload
 import io.github.dmytrozinkevych.homerstats.model.VmMetricSeries
 import io.ktor.client.*
 import io.ktor.client.plugins.*
+import io.ktor.client.plugins.logging.*
 import java.time.Instant
 
 private const val REQUEST_TIMEOUT_MS = 10_000L
@@ -31,6 +32,13 @@ fun HttpClientConfig<*>.configTimeouts() {
         requestTimeoutMillis = REQUEST_TIMEOUT_MS
         connectTimeoutMillis = CONNECT_TIMEOUT_MS
         socketTimeoutMillis = SOCKET_TIMEOUT_MS
+    }
+}
+
+fun HttpClientConfig<*>.configLogging() {
+    install(Logging) {
+        logger = Logger.DEFAULT
+        level = LogLevel.INFO
     }
 }
 
