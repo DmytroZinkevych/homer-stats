@@ -57,24 +57,24 @@ class HomebridgeClientProvider(
             configLogging()
         }.use { authClient ->
             return try {
-                val response = authClient.post(homebridgeUrl.trimEnd('/') + LOGIN_ENDPOINT) {
+                authClient.post(homebridgeUrl.trimEnd('/') + LOGIN_ENDPOINT) {
                     contentType(ContentType.Application.Json)
                     setBody(jsonSerializer.encodeToString(AuthRequest(user, password)))
                 }
-                if (response.status.isSuccess()) {
-                    val token = jsonSerializer.parseToJsonElement(response.bodyAsText())
-                        .jsonObject[ACCESS_TOKEN_FIELD]
-                        ?.jsonPrimitive
-                        ?.contentOrNull
-                    if (token != null) {
-                        BearerTokens(accessToken = token, refreshToken = "")
-                    } else {
-                        logger.warn { "Homebridge login succeeded but '$ACCESS_TOKEN_FIELD' field was missing" }
-                        null
+                    .takeIf { response -> response.status.isSuccess() }
+                    ?.let { response ->
+                        jsonSerializer.parseToJsonElement(response.bodyAsText())
+                            .jsonObject[ACCESS_TOKEN_FIELD]
+                            ?.jsonPrimitive
+                            ?.contentOrNull
+                            ?.let {
+                                BearerTokens(accessToken = it, refreshToken = "")
+                            }
+                            ?: run {
+                                logger.error { "Homebridge login succeeded but '$ACCESS_TOKEN_FIELD' field was missing" }
+                                null
+                            }
                     }
-                } else {
-                    null
-                }
             } catch (e: CancellationException) {
                 throw e
             } catch (_: Exception) {
