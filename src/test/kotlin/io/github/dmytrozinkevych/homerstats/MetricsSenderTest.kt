@@ -59,9 +59,9 @@ class MetricsSenderTest {
             assertEquals(ContentType.parse("application/stream+json"), capturedContentType)
 
             val expectedNdjson = """
-            {"metric":{"__name__":"temperature_celsius","location":"indoor","source":"homepod"},"values":[22.5],"timestamps":[1786988493000]}
-            {"metric":{"__name__":"humidity_percents","location":"indoor","source":"homepod"},"values":[49.0],"timestamps":[1786988493000]}
-            """.trimIndent()
+                {"metric":{"__name__":"temperature_celsius","location":"indoor","source":"homepod"},"values":[22.5],"timestamps":[1786988493000]}
+                {"metric":{"__name__":"humidity_percents","location":"indoor","source":"homepod"},"values":[49.0],"timestamps":[1786988493000]}
+                """.trimIndent()
             assertEquals(expectedNdjson, capturedBody)
         }
     }
