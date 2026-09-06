@@ -3,7 +3,6 @@ package io.github.dmytrozinkevych.homerstats
 import io.github.dmytrozinkevych.homerstats.model.ClimateTelemetryPayload
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.*
-import io.ktor.client.plugins.logging.*
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.engine.*
@@ -26,8 +25,8 @@ private val HTTP_SERVER_ENGINE = io.ktor.server.cio.CIO
 private val HTTP_CLIENT_ENGINE = io.ktor.client.engine.cio.CIO
 
 private const val HOMEBRIDGE_URL = "http://localhost:8581"
-private val HOMEBRIDGE_USER = getEnvVar("HOMEBRIDGE_USER")
-private val HOMEBRIDGE_PASSWORD = getEnvVar("HOMEBRIDGE_PASSWORD")
+private const val HOMEBRIDGE_USER_VAR = "HOMEBRIDGE_USER"
+private const val HOMEBRIDGE_PASSWORD_ENV_VAR = "HOMEBRIDGE_PASSWORD"
 
 private val AIR_QUALITY_POLLING_INTERVAL = 5.minutes
 
@@ -52,8 +51,8 @@ fun Application.module() {
     val metricsSender = MetricsSender(VM_IMPORT_URL, httpClient, mainJsonSerializer)
     val airQualityPoller = AirQualityPoller(
         homebridgeUrl = HOMEBRIDGE_URL,
-        user = HOMEBRIDGE_USER,
-        password = HOMEBRIDGE_PASSWORD,
+        user = getEnvVar(HOMEBRIDGE_USER_VAR),
+        password = getEnvVar(HOMEBRIDGE_PASSWORD_ENV_VAR),
         interval = AIR_QUALITY_POLLING_INTERVAL,
         httpClientEngine = HTTP_CLIENT_ENGINE.create(),
         jsonSerializer = mainJsonSerializer,
