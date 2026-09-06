@@ -1,6 +1,6 @@
 package io.github.dmytrozinkevych.homerstats
 
-import io.github.dmytrozinkevych.homerstats.model.VmMetricSeries
+import io.github.dmytrozinkevych.homerstats.model.MetricSeries
 import io.ktor.client.*
 import io.ktor.client.engine.mock.*
 import io.ktor.http.*
@@ -23,45 +23,46 @@ class MetricsSenderTest {
             respond("", HttpStatusCode.NoContent)
         }
 
-        val client = HttpClient(mockEngine)
-        val sender = MetricsSender(
-            "http://localhost:8428/api/v1/import",
-            client,
-            mainJsonSerializer
-        )
-
-        val series = listOf(
-            VmMetricSeries(
-                mapOf(
-                    "__name__" to "temperature_celsius",
-                    "location" to "indoor",
-                    "source" to "homepod"
-                ),
-                listOf(22.5f),
-                listOf(1786988493000L)
-            ),
-            VmMetricSeries(
-                mapOf(
-                    "__name__" to "humidity_percents",
-                    "location" to "indoor",
-                    "source" to "homepod"
-                ),
-                listOf(49.0f),
-                listOf(1786988493000L)
+        HttpClient(mockEngine).use { client ->
+            val sender = MetricsSender(
+                "http://localhost:8428/api/v1/import",
+                client,
+                mainJsonSerializer
             )
-        )
 
-        // When
-        val response = sender.sendMetrics(series)
+            val series = listOf(
+                MetricSeries(
+                    mapOf(
+                        "__name__" to "temperature_celsius",
+                        "location" to "indoor",
+                        "source" to "homepod"
+                    ),
+                    listOf(22.5f),
+                    listOf(1786988493000L)
+                ),
+                MetricSeries(
+                    mapOf(
+                        "__name__" to "humidity_percents",
+                        "location" to "indoor",
+                        "source" to "homepod"
+                    ),
+                    listOf(49.0f),
+                    listOf(1786988493000L)
+                )
+            )
 
-        // Then
-        assertEquals(HttpStatusCode.NoContent, response.status)
-        assertEquals(ContentType.parse("application/stream+json"), capturedContentType)
+            // When
+            val response = sender.sendMetrics(series)
 
-        val expectedNdjson = """
-            {"metric":{"__name__":"temperature_celsius","location":"indoor","source":"homepod"},"values":[22.5],"timestamps":[1786988493000]}
-            {"metric":{"__name__":"humidity_percents","location":"indoor","source":"homepod"},"values":[49.0],"timestamps":[1786988493000]}
-            """.trimIndent()
-        assertEquals(expectedNdjson, capturedBody)
+            // Then
+            assertEquals(HttpStatusCode.NoContent, response.status)
+            assertEquals(ContentType.parse("application/stream+json"), capturedContentType)
+
+            val expectedNdjson = """
+                {"metric":{"__name__":"temperature_celsius","location":"indoor","source":"homepod"},"values":[22.5],"timestamps":[1786988493000]}
+                {"metric":{"__name__":"humidity_percents","location":"indoor","source":"homepod"},"values":[49.0],"timestamps":[1786988493000]}
+                """.trimIndent()
+            assertEquals(expectedNdjson, capturedBody)
+        }
     }
 }

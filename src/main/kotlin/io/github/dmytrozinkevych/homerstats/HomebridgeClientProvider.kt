@@ -1,0 +1,85 @@
+package io.github.dmytrozinkevych.homerstats
+
+import io.github.oshai.kotlinlogging.KotlinLogging
+import io.ktor.client.*
+import io.ktor.client.engine.*
+import io.ktor.client.plugins.auth.*
+import io.ktor.client.plugins.auth.providers.*
+import io.ktor.client.request.*
+import io.ktor.client.statement.*
+import io.ktor.http.*
+import io.ktor.utils.io.*
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.contentOrNull
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
+
+private val logger = KotlinLogging.logger {}
+
+private const val LOGIN_ENDPOINT = "/api/auth/login"
+private const val ACCESS_TOKEN_FIELD = "access_token"
+
+@Serializable
+private data class AuthRequest(val username: String, val password: String)
+
+class HomebridgeClientProvider(
+    private val homebridgeUrl: String,
+    private val user: String,
+    private val password: String,
+    private val jsonSerializer: Json,
+    private val httpClientEngineFactory: HttpClientEngineFactory<HttpClientEngineConfig>
+) {
+    fun createClient(): HttpClient {
+        return HttpClient(httpClientEngineFactory) {
+            configTimeouts()
+
+            configLogging()
+
+            install(Auth) {
+                bearer {
+                    loadTokens {
+                        fetchToken()
+                    }
+
+                    refreshTokens {
+                        fetchToken()
+                    }
+                }
+            }
+        }
+    }
+
+    private suspend fun fetchToken(): BearerTokens? {
+        // Separate unauthenticated client for auth calls to avoid infinite loops
+        HttpClient(httpClientEngineFactory) {
+            configTimeouts()
+            configLogging()
+        }.use { authClient ->
+            return try {
+                authClient.post(homebridgeUrl.trimEnd('/') + LOGIN_ENDPOINT) {
+                    contentType(ContentType.Application.Json)
+                    setBody(jsonSerializer.encodeToString(AuthRequest(user, password)))
+                }
+                    .takeIf { response -> response.status.isSuccess() }
+                    ?.let { response ->
+                        jsonSerializer.parseToJsonElement(response.bodyAsText())
+                            .jsonObject[ACCESS_TOKEN_FIELD]
+                            ?.jsonPrimitive
+                            ?.contentOrNull
+                            ?.let {
+                                BearerTokens(accessToken = it, refreshToken = "")
+                            }
+                            ?: run {
+                                logger.error { "Homebridge login succeeded but '$ACCESS_TOKEN_FIELD' field was missing" }
+                                null
+                            }
+                    }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (_: Exception) {
+                null
+            }
+        }
+    }
+}
