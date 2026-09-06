@@ -3,7 +3,6 @@ package io.github.dmytrozinkevych.homerstats
 import io.github.dmytrozinkevych.homerstats.model.VmMetricSeries
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.*
-import io.ktor.client.engine.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
@@ -18,20 +17,11 @@ private const val PM_2_5_DENSITY_FIELD = "PM2_5Density"
 private const val STATUS_ACTIVE = "StatusActive"
 
 class AirQualityPoller(
-    private val homebridgeUrl: String,
-    user: String,
-    password: String,
     private val interval: Duration,
-    httpClientEngineFactory: HttpClientEngineFactory<HttpClientEngineConfig>,
-    private val jsonSerializer: Json,
+    private val homebridgeUrl: String,
+    private val homebridgeClient: HttpClient,
     private val metricsSender: MetricsSender,
-    private val homebridgeClient: HttpClient = HomebridgeClientProvider(
-        homebridgeUrl,
-        user,
-        password,
-        jsonSerializer,
-        httpClientEngineFactory
-    ).createClient()
+    private val jsonSerializer: Json,
 ) : AutoCloseable by homebridgeClient {
 
     fun startPolling(scope: CoroutineScope) {

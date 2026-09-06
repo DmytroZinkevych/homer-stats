@@ -48,15 +48,23 @@ fun Application.module() {
         configTimeouts()
         configLogging()
     }
+
     val metricsSender = MetricsSender(VM_IMPORT_URL, httpClient, mainJsonSerializer)
-    val airQualityPoller = AirQualityPoller(
+
+    val homebridgeClient: HttpClient = HomebridgeClientProvider(
         homebridgeUrl = HOMEBRIDGE_URL,
         user = getEnvVar(HOMEBRIDGE_USER_VAR),
         password = getEnvVar(HOMEBRIDGE_PASSWORD_ENV_VAR),
-        interval = AIR_QUALITY_POLLING_INTERVAL,
-        httpClientEngineFactory = HTTP_CLIENT_ENGINE_FACTORY,
         jsonSerializer = mainJsonSerializer,
-        metricsSender = metricsSender
+        httpClientEngineFactory = HTTP_CLIENT_ENGINE_FACTORY
+    ).createClient()
+
+    val airQualityPoller = AirQualityPoller(
+        interval = AIR_QUALITY_POLLING_INTERVAL,
+        homebridgeUrl = HOMEBRIDGE_URL,
+        homebridgeClient = homebridgeClient,
+        metricsSender = metricsSender,
+        jsonSerializer = mainJsonSerializer,
     )
 
     monitor.subscribe(ApplicationStopped) {
