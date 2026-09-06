@@ -21,8 +21,8 @@ private const val SERVER_PORT = 8000
 private const val VM_IMPORT_URL = "http://localhost:8428/api/v1/import"
 private const val MAX_PAYLOAD_BYTES = 65_536L // 64 KB
 
-private val HTTP_SERVER_ENGINE = io.ktor.server.cio.CIO
-private val HTTP_CLIENT_ENGINE = io.ktor.client.engine.cio.CIO
+private val HTTP_SERVER_ENGINE_FACTORY = io.ktor.server.cio.CIO
+private val HTTP_CLIENT_ENGINE_FACTORY = io.ktor.client.engine.cio.CIO
 
 private const val HOMEBRIDGE_URL = "http://localhost:8581"
 private const val HOMEBRIDGE_USER_VAR = "HOMEBRIDGE_USER"
@@ -37,14 +37,14 @@ val mainJsonSerializer = Json {
 
 fun main() {
     embeddedServer(
-        factory = HTTP_SERVER_ENGINE,
+        factory = HTTP_SERVER_ENGINE_FACTORY,
         port = SERVER_PORT,
         module = Application::module
     ).start(wait = true)
 }
 
 fun Application.module() {
-    val httpClient = HttpClient(HTTP_CLIENT_ENGINE) {
+    val httpClient = HttpClient(HTTP_CLIENT_ENGINE_FACTORY) {
         configTimeouts()
         configLogging()
     }
@@ -54,7 +54,7 @@ fun Application.module() {
         user = getEnvVar(HOMEBRIDGE_USER_VAR),
         password = getEnvVar(HOMEBRIDGE_PASSWORD_ENV_VAR),
         interval = AIR_QUALITY_POLLING_INTERVAL,
-        httpClientEngine = HTTP_CLIENT_ENGINE,
+        httpClientEngineFactory = HTTP_CLIENT_ENGINE_FACTORY,
         jsonSerializer = mainJsonSerializer,
         metricsSender = metricsSender
     )

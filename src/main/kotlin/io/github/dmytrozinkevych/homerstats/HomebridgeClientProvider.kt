@@ -28,10 +28,10 @@ class HomebridgeClientProvider(
     private val user: String,
     private val password: String,
     private val jsonSerializer: Json,
-    private val httpClientEngine: HttpClientEngineFactory<HttpClientEngineConfig>
+    private val httpClientEngineFactory: HttpClientEngineFactory<HttpClientEngineConfig>
 ) {
     fun createClient(): HttpClient {
-        return HttpClient(httpClientEngine) {
+        return HttpClient(httpClientEngineFactory) {
             configTimeouts()
 
             configLogging()
@@ -52,7 +52,7 @@ class HomebridgeClientProvider(
 
     private suspend fun fetchToken(): BearerTokens? {
         // Separate unauthenticated client for auth calls to avoid infinite loops
-        HttpClient(httpClientEngine) {
+        HttpClient(httpClientEngineFactory) {
             configTimeouts()
             configLogging()
         }.use { authClient ->

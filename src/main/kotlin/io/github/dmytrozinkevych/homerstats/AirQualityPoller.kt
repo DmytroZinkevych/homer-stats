@@ -22,7 +22,7 @@ class AirQualityPoller(
     user: String,
     password: String,
     private val interval: Duration,
-    httpClientEngine: HttpClientEngineFactory<HttpClientEngineConfig>,
+    httpClientEngineFactory: HttpClientEngineFactory<HttpClientEngineConfig>,
     jsonSerializer: Json,
     private val metricsSender: MetricsSender,
     private val homebridgeClient: HttpClient = HomebridgeClientProvider(
@@ -30,7 +30,7 @@ class AirQualityPoller(
         user,
         password,
         jsonSerializer,
-        httpClientEngine
+        httpClientEngineFactory
     ).createClient()
 ) : AutoCloseable by homebridgeClient {
 
@@ -54,7 +54,7 @@ class AirQualityPoller(
     }
 
     private suspend fun fetchAirQualityData(): List<VmMetricSeries>? {
-        val response = homebridgeClient.get(homebridgeUrl + ACCESSORIES_ENDPOINT)
+        val response = homebridgeClient.get(homebridgeUrl.trimEnd('/') + ACCESSORIES_ENDPOINT)
         val isSuccess = response.status.isSuccess()
         if (!isSuccess) {
             logger.warn { "Couldn't connect to homebridge, status: ${response.status}" }
