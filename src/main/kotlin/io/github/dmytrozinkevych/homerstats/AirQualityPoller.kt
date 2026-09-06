@@ -23,7 +23,7 @@ class AirQualityPoller(
     password: String,
     private val interval: Duration,
     httpClientEngineFactory: HttpClientEngineFactory<HttpClientEngineConfig>,
-    jsonSerializer: Json,
+    private val jsonSerializer: Json,
     private val metricsSender: MetricsSender,
     private val homebridgeClient: HttpClient = HomebridgeClientProvider(
         homebridgeUrl,
@@ -61,7 +61,7 @@ class AirQualityPoller(
             return null
         }
         val jsonString = response.bodyAsText()
-        val pm25Value = mainJsonSerializer.parseToJsonElement(jsonString)
+        val pm25Value = jsonSerializer.parseToJsonElement(jsonString)
             .jsonArray
             .asSequence()
             .map { it.jsonObject }
