@@ -10,8 +10,8 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 
 private const val HOMEBRIDGE_URL = "http://127.0.0.1:8581"
-private const val TEST_USER = "user"
-private const val TEST_PASSWORD = "password"
+private const val TEST_USER = "test-user"
+private const val TEST_PASSWORD = "test-password"
 
 class HomebridgeClientProviderTest {
 
