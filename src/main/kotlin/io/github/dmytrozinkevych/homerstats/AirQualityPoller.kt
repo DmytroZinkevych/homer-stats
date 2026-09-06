@@ -7,10 +7,7 @@ import io.ktor.client.engine.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
-import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
 import kotlinx.serialization.json.*
 import kotlin.time.Duration
 
@@ -18,6 +15,7 @@ private val logger = KotlinLogging.logger {}
 
 private const val ACCESSORIES_ENDPOINT = "/api/accessories"
 private const val PM_2_5_DENSITY_FIELD = "PM2_5Density"
+private const val STATUS_ACTIVE = "StatusActive"
 
 class AirQualityPoller(
     private val homebridgeUrl: String,
@@ -38,7 +36,7 @@ class AirQualityPoller(
 
     fun startPolling(scope: CoroutineScope) {
         scope.launch {
-            while (true) {
+            while (isActive) {
                 val metrics = try {
                     fetchAirQualityData()
                 } catch (e: CancellationException) {
@@ -69,13 +67,13 @@ class AirQualityPoller(
             .map { it.jsonObject }
             .mapNotNull { it["values"] }
             .map { it.jsonObject }
-            .firstOrNull { it.containsKey(PM_2_5_DENSITY_FIELD) }
+            .firstOrNull { it.containsKey(PM_2_5_DENSITY_FIELD) && it[STATUS_ACTIVE]?.jsonPrimitive?.intOrNull == 1 }
             ?.get(PM_2_5_DENSITY_FIELD)
             ?.jsonPrimitive
             ?.floatOrNull
 
         if (pm25Value == null) {
-            logger.warn { "Couldn't get PM 2.5 value from homebridge data" }
+            logger.warn { "Couldn't get PM 2.5 value from homebridge data - device may be disconnected" }
             return null
         }
         val timestamp = response.responseTime.timestamp
