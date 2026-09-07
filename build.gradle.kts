@@ -6,7 +6,7 @@ plugins {
 }
 
 group = "io.github.dmytrozinkevych"
-version = "0.4"
+version = "0.5"
 
 repositories {
     mavenCentral()
