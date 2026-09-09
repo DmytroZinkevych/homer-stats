@@ -11,7 +11,6 @@ import kotlinx.serialization.json.*
 import org.owasp.encoder.Encode
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
-import kotlin.time.Duration.Companion.seconds
 
 private val logger = KotlinLogging.logger {}
 
@@ -25,10 +24,9 @@ private const val NAME_FIELD = "Name"
 
 private const val DEFAULT_SOURCE_NAME = "air_quality_sensor"
 
-private val marginMillis = 5.seconds.inWholeMilliseconds
-
 class AirQualityPoller(
     private val interval: Duration,
+    private val offset: Duration,
     private val homebridgeUrl: String,
     private val homebridgeClient: HttpClient,
     private val metricsSender: MetricsSender,
@@ -49,20 +47,21 @@ class AirQualityPoller(
                 if (metrics != null) {
                     metricsSender.sendAndVerify(metrics)
                 }
-                delay(calculateDelay())
+                delay(calculateAlignedDelay())
             }
         }
     }
 
-    private fun calculateDelay(): Duration {
+    private fun calculateAlignedDelay(): Duration {
         val intervalMillis = interval.inWholeMilliseconds
+        val offsetMillis = offset.inWholeMilliseconds
         val nowMillis = System.currentTimeMillis()
 
         // preventing drift from fixed delays to end up on the exact clock boundary (e.g. 12:05:00 after 12:00:00)
         val untilBoundary = intervalMillis - (nowMillis % intervalMillis)
 
-        var delay = untilBoundary - marginMillis
-        if (untilBoundary <= marginMillis) {
+        var delay = untilBoundary - offsetMillis
+        if (untilBoundary <= offsetMillis) {
             // skipping this iteration since we're already on the new one
             delay += intervalMillis
         }

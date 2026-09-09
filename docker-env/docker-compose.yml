@@ -1,6 +1,6 @@
 services:
   homebridge:
-    image: homebridge/homebridge:latest # sha256:f2f5b3282a2ea4125f104bf6536b7c132cf331c23bfa7b407313bc3bf04589f7
+    image: homebridge/homebridge:latest # sha256:77c685a40911b3b95448f3550be0c8b94cd7b4e66daecc1cc39a8285be75b245
     container_name: homebridge
     restart: unless-stopped
     network_mode: host
@@ -20,7 +20,7 @@ services:
         max-file: "1"
 
   victoriametrics:
-    image: victoriametrics/victoria-metrics:latest # sha256:13b8951e35bb3589626816538483127785a9d8b53f9f5123769db0fcab1d961f
+    image: victoriametrics/victoria-metrics:latest # sha256:6d164540a04f49ba4e696cbdb70f9fee78be1e94b8f2a1292743a0b1ab8275bd
     container_name: victoriametrics
     restart: unless-stopped
     ports:
@@ -62,7 +62,7 @@ services:
         max-file: "1"
 
   grafana:
-    image: grafana/grafana:latest # sha256:ab5cb380e3ff3172d6c8bd2e7cfd31cce977d2881b260e1f5bc089bf0b759b43
+    image: grafana/grafana:latest # sha256:f772d434e8fab0049deb2b1b30abd43342bcfca1537614aa8d36080232cf4283
     container_name: grafana
     ports:
       - "3000:3000"

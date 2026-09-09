@@ -7,16 +7,12 @@ import io.ktor.client.plugins.*
 import io.ktor.client.plugins.logging.*
 import java.time.Instant
 
-private const val REQUEST_TIMEOUT_MS = 10_000L
-private const val CONNECT_TIMEOUT_MS = 5_000L
-private const val SOCKET_TIMEOUT_MS = 5_000L
-
-private const val LOCATION_FIELD = "location"
-private const val SOURCE_FIELD = "source"
-
 private const val TEMPERATURE_METRIC_NAME = "temperature_celsius"
 private const val HUMIDITY_METRIC_NAME = "humidity_percents"
 private const val PM_2_5_METRIC_NAME = "pm_2_5_density"
+
+private const val LOCATION_FIELD = "location"
+private const val SOURCE_FIELD = "source"
 
 private const val AIR_QUALITY_HOME_LOCATION = "indoor"
 
@@ -33,9 +29,9 @@ fun getEnvVar(name: String): String = checkNotNull(System.getenv(name)) {
 
 fun HttpClientConfig<*>.configTimeouts() {
     install(HttpTimeout) {
-        requestTimeoutMillis = REQUEST_TIMEOUT_MS
-        connectTimeoutMillis = CONNECT_TIMEOUT_MS
-        socketTimeoutMillis = SOCKET_TIMEOUT_MS
+        requestTimeoutMillis = Config.REQUEST_TIMEOUT_MS
+        connectTimeoutMillis = Config.CONNECT_TIMEOUT_MS
+        socketTimeoutMillis = Config.SOCKET_TIMEOUT_MS
     }
 }
 
@@ -81,6 +77,17 @@ fun String.toEpochMilli(): Long = try {
     Instant.now().toEpochMilli()
 }
 
+fun String?.formatForMetric(defaultIfBlank: String = "unknown"): String =
+    this
+        ?.replace(CAMEL_CASE_REGEX, "$1_$2")
+        ?.lowercase()
+        ?.replace(LETTER_TO_DIGIT_REGEX, "$1_$2")
+        ?.replace(DIGIT_TO_LETTER_REGEX, "$1_$2")
+        ?.replace(NON_ALPHANUMERIC_REGEX, "_")
+        ?.trim('_')
+        ?.ifBlank { defaultIfBlank }
+        ?: defaultIfBlank
+
 fun validateTextField(fieldName: String, fieldValue: String) {
     require(fieldValue.isNotBlank()) {
         "'$fieldName' field cannot be blank"
@@ -95,14 +102,3 @@ fun validateTextField(fieldName: String, fieldValue: String) {
 
 fun String.containsNewlines() =
     this.contains('\n') || this.contains('\r')
-
-fun String?.formatForMetric(defaultIfBlank: String = "unknown"): String =
-    this
-        ?.replace(CAMEL_CASE_REGEX, "$1_$2")
-        ?.lowercase()
-        ?.replace(LETTER_TO_DIGIT_REGEX, "$1_$2")
-        ?.replace(DIGIT_TO_LETTER_REGEX, "$1_$2")
-        ?.replace(NON_ALPHANUMERIC_REGEX, "_")
-        ?.trim('_')
-        ?.ifBlank { defaultIfBlank }
-        ?: defaultIfBlank
