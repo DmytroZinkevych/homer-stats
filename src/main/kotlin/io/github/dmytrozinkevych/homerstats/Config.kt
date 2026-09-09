@@ -10,6 +10,10 @@ object Config {
     const val SERVER_PORT = 8000
     const val SERVER_MAX_REQUEST_BODY_BYTES = 65_536L // 64 KB
 
+    const val REQUEST_TIMEOUT_MS = 10_000L
+    const val CONNECT_TIMEOUT_MS = 5_000L
+    const val SOCKET_TIMEOUT_MS = 5_000L
+
     const val METRICS_IMPORT_URL = "http://localhost:8428/api/v1/import"
 
     const val HOMEBRIDGE_URL = "http://localhost:8581"
