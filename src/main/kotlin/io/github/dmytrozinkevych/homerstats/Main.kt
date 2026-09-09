@@ -6,6 +6,7 @@ import io.ktor.server.engine.*
 import io.ktor.server.plugins.bodylimit.*
 import kotlinx.serialization.json.Json
 import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Duration.Companion.seconds
 
 private const val SERVER_PORT = 8000
 private const val VM_IMPORT_URL = "http://localhost:8428/api/v1/import"
@@ -19,6 +20,7 @@ private const val HOMEBRIDGE_USER_VAR = "HOMEBRIDGE_USER"
 private const val HOMEBRIDGE_PASSWORD_ENV_VAR = "HOMEBRIDGE_PASSWORD"
 
 private val AIR_QUALITY_POLLING_INTERVAL = 5.minutes
+private val AIR_QUALITY_POLLING_OFFSET = 5.seconds
 
 val mainJsonSerializer = Json {
     encodeDefaults = true
@@ -51,6 +53,7 @@ fun Application.module() {
 
     val airQualityPoller = AirQualityPoller(
         interval = AIR_QUALITY_POLLING_INTERVAL,
+        offset = AIR_QUALITY_POLLING_OFFSET,
         homebridgeUrl = HOMEBRIDGE_URL,
         homebridgeClient = homebridgeClient,
         metricsSender = metricsSender,

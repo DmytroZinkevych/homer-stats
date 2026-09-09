@@ -12,12 +12,14 @@ import kotlin.test.Test
 import kotlin.test.assertContains
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
+import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
 private const val HOMEBRIDGE_URL = "http://localhost:8581"
 private const val VM_IMPORT_URL = "http://localhost:8428/api/v1/import"
 
 private val interval = 5.seconds
+private val offset = 500.milliseconds
 
 class AirQualityPollerTest {
     @Test
@@ -54,6 +56,7 @@ class AirQualityPollerTest {
         val metricsSender = MetricsSender(VM_IMPORT_URL, HttpClient(mockMetricsSenderEngine), mainJsonSerializer)
         val poller = AirQualityPoller(
             interval = interval,
+            offset = offset,
             homebridgeUrl = HOMEBRIDGE_URL,
             homebridgeClient = HttpClient(mockHomebridgeEngine),
             metricsSender = metricsSender,
@@ -102,6 +105,7 @@ class AirQualityPollerTest {
 
         val poller = AirQualityPoller(
             interval = interval,
+            offset = offset,
             homebridgeUrl = HOMEBRIDGE_URL,
             homebridgeClient = HttpClient(mockHomebridgeEngine),
             metricsSender = dummyMetricsSender(),
@@ -124,6 +128,7 @@ class AirQualityPollerTest {
 
         val poller = AirQualityPoller(
             interval = interval,
+            offset = offset,
             homebridgeUrl = HOMEBRIDGE_URL,
             homebridgeClient = HttpClient(mockHomebridgeEngine),
             metricsSender = dummyMetricsSender(),
