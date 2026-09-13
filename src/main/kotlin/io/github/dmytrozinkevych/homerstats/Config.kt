@@ -15,10 +15,12 @@ object Config {
     const val SOCKET_TIMEOUT_MS = 5_000L
 
     const val METRICS_IMPORT_URL = "http://localhost:8428/api/v1/import"
-
     const val HOMEBRIDGE_URL = "http://localhost:8581"
 
-    const val HOMEBRIDGE_USER_VAR = "HOMEBRIDGE_USER"
+    const val API_KEY_HEADER_NAME = "X-API-Key"
+
+    const val API_KEY_ENV_VAR = "HOMER_STATS_API_KEY"   // Generate with kotlin-notebook.ipynb
+    const val HOMEBRIDGE_USER_ENV_VAR = "HOMEBRIDGE_USER"
     const val HOMEBRIDGE_PASSWORD_ENV_VAR = "HOMEBRIDGE_PASSWORD"
 
     val POLLING_INTERVAL = 5.minutes

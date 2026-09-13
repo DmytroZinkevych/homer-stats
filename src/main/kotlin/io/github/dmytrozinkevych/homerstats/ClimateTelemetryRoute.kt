@@ -14,17 +14,25 @@ import org.owasp.encoder.Encode
 private val logger = KotlinLogging.logger {}
 
 fun Application.configureClimateTelemetryRoute(
+    apiKey: String,
     metricsSender: MetricsSender,
     jsonSerializer: Json
 ) {
     routing {
         post("/api/climate-telemetry") {
+            val receivedApiKey = call.request.headers[Config.API_KEY_HEADER_NAME]
+            if (!isApiKeyValid(receivedApiKey, apiKey)) {
+                logger.warn { "Received request with invalid API key" }
+                call.respond(HttpStatusCode.Unauthorized, "Invalid or missing API key")
+                return@post
+            }
+
             val payload = parsePayload(call.receiveText(), jsonSerializer)
             if (payload == null) {
                 call.respond(HttpStatusCode.BadRequest, "Invalid JSON payload")
                 return@post
             }
-            logger.info { "Received climate telemetry: $payload" }
+            logger.info { "Received climate telemetry:\n$payload" }
 
             val isPersisted = metricsSender.sendAndVerify(payload.toMetrics())
             if (isPersisted) {
