@@ -5,6 +5,7 @@ import io.github.dmytrozinkevych.homerstats.model.MetricSeries
 import io.ktor.client.*
 import io.ktor.client.plugins.*
 import io.ktor.client.plugins.logging.*
+import java.security.MessageDigest
 import java.time.Instant
 
 private const val TEMPERATURE_METRIC_NAME = "temperature_celsius"
@@ -40,6 +41,18 @@ fun HttpClientConfig<*>.configLogging() {
         logger = Logger.DEFAULT
         level = LogLevel.INFO
     }
+}
+
+fun isApiKeyValid(keyToVerify: String?, expectedKey: String?): Boolean {
+    if (keyToVerify.isNullOrEmpty() || expectedKey.isNullOrEmpty()) {
+        return false
+    }
+
+    val providedBytes = keyToVerify.toByteArray(Charsets.UTF_8)
+    val expectedBytes = expectedKey.toByteArray(Charsets.UTF_8)
+
+    // executes in constant time to prevent side-channel timing attacks
+    return MessageDigest.isEqual(providedBytes, expectedBytes)
 }
 
 fun ClimateTelemetryPayload.toMetrics(): List<MetricSeries> {

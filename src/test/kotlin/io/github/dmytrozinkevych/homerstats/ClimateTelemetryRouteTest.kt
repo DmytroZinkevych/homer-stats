@@ -10,6 +10,8 @@ import io.ktor.utils.io.*
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
+private const val API_KEY = "test-api-key"
+
 class ClimateTelemetryRouteTest {
 
     @Test
@@ -32,12 +34,13 @@ class ClimateTelemetryRouteTest {
         )
 
         application {
-            configureClimateTelemetryRoute(metricsSender, mainJsonSerializer)
+            configureClimateTelemetryRoute(API_KEY, metricsSender, mainJsonSerializer)
         }
 
         // When
         val response = client.post("/api/climate-telemetry") {
             contentType(ContentType.Application.Json)
+            header(Config.API_KEY_HEADER_NAME, API_KEY)
             setBody(
                 """
                 {
@@ -77,12 +80,13 @@ class ClimateTelemetryRouteTest {
         )
 
         application {
-            configureClimateTelemetryRoute(metricsSender, mainJsonSerializer)
+            configureClimateTelemetryRoute(API_KEY, metricsSender, mainJsonSerializer)
         }
 
         // When
         val response = client.post("/api/climate-telemetry") {
             contentType(ContentType.Application.Json)
+            header(Config.API_KEY_HEADER_NAME, API_KEY)
             setBody(
                 """
                 {
@@ -105,12 +109,13 @@ class ClimateTelemetryRouteTest {
     fun `POST climate-telemetry returns 400 when receives malformed payload`() = testApplication {
         // Given
         application {
-            configureClimateTelemetryRoute(dummyMetricsSender(), mainJsonSerializer)
+            configureClimateTelemetryRoute(API_KEY, dummyMetricsSender(), mainJsonSerializer)
         }
 
         // When
         val response = client.post("/api/climate-telemetry") {
             contentType(ContentType.Application.Json)
+            header(Config.API_KEY_HEADER_NAME, API_KEY)
             setBody(
                 """
                 {
@@ -127,5 +132,34 @@ class ClimateTelemetryRouteTest {
         // Then
         assertEquals(HttpStatusCode.BadRequest, response.status)
         assertEquals("Invalid JSON payload", response.bodyAsText())
+    }
+
+    @Test
+    fun `POST climate-telemetry returns 401 when API key is invalid`() = testApplication {
+        // Given
+        application {
+            configureClimateTelemetryRoute(API_KEY, dummyMetricsSender(), mainJsonSerializer)
+        }
+
+        // When
+        val response = client.post("/api/climate-telemetry") {
+            contentType(ContentType.Application.Json)
+            header(Config.API_KEY_HEADER_NAME, "invalid-api-key")
+            setBody(
+                """
+                {
+                    "timestamp": "2026-08-17T19:41:33+02:00",
+                    "location": "indoor",
+                    "source": "homepod",
+                    "temperature": "cold",
+                    "humidity": 49
+                }
+                """.trimIndent()
+            )
+        }
+
+        // Then
+        assertEquals(HttpStatusCode.Unauthorized, response.status)
+        assertEquals("Invalid or missing API key", response.bodyAsText())
     }
 }

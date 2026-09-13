@@ -29,7 +29,7 @@ fun Application.module() {
 
     val homebridgeClient: HttpClient = HomebridgeClientProvider(
         homebridgeUrl = Config.HOMEBRIDGE_URL,
-        user = getEnvVar(Config.HOMEBRIDGE_USER_VAR),
+        user = getEnvVar(Config.HOMEBRIDGE_USER_ENV_VAR),
         password = getEnvVar(Config.HOMEBRIDGE_PASSWORD_ENV_VAR),
         jsonSerializer = mainJsonSerializer,
         httpClientEngineFactory = Config.HTTP_CLIENT_ENGINE_FACTORY
@@ -55,7 +55,11 @@ fun Application.module() {
         }
     }
 
-    configureClimateTelemetryRoute(metricsSender, mainJsonSerializer)
+    configureClimateTelemetryRoute(
+        apiKey = getEnvVar(Config.API_KEY_ENV_VAR),
+        metricsSender = metricsSender,
+        jsonSerializer = mainJsonSerializer
+    )
 
     airQualityPoller.startPolling(this)
 }
